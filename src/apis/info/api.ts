@@ -2,10 +2,10 @@
  * @packageDocumentation
  * @module API-Info
  */
+import BN from 'bn.js';
 import AvalancheCore from '../../avalanche';
 import { JRPCAPI } from '../../common/jrpcapi';
 import { RequestResponseData } from '../../common/apibase';
-import BN from "bn.js";
 
 /**
  * Class for interacting with a node's InfoAPI.
@@ -73,15 +73,11 @@ export class InfoAPI extends JRPCAPI {
    *
    * @returns Returns a Promise<object> of the transaction fee in nAVAX.
    */
-  getTxFee = async ():Promise<{txFee:BN, creationTxFee:BN}> => {
-    return this.callMethod('info.getTxFee')
-        .then((response:RequestResponseData) => {
-          return {
-            txFee: new BN(response.data.result.txFee, 10),
-            creationTxFee: new BN(response.data.result.creationTxFee, 10)
-          }
-        });
-  };
+  getTxFee = async ():Promise<{txFee:BN, creationTxFee:BN}> => this.callMethod('info.getTxFee')
+    .then((response:RequestResponseData) => ({
+      txFee: new BN(response.data.result.txFee, 10),
+      creationTxFee: new BN(response.data.result.creationTxFee, 10),
+    }));
 
   /**
    * Check whether a given chain is done bootstrapping
@@ -91,10 +87,10 @@ export class InfoAPI extends JRPCAPI {
    */
   isBootstrapped = async (chain:string):Promise<boolean> => {
     const params:any = {
-      chain
+      chain,
     };
     return this.callMethod('info.isBootstrapped', params)
-        .then((response:RequestResponseData) => response.data.result.isBootstrapped);
+      .then((response:RequestResponseData) => response.data.result.isBootstrapped);
   };
 
   /**

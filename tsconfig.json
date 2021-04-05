@@ -22,9 +22,12 @@
       "./node_modules/@types"
     ]
   },
+  "include": [
+    "src",
+    "examples"
+  ],
   "exclude": [
     "node_modules",
-    "examples",
     "typings"
   ],
   "typeAcquisition": {

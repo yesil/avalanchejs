@@ -4,14 +4,9 @@
  */
 
 import { AxiosRequestConfig } from 'axios';
-import BinTools from '../utils/bintools';
 import AvalancheCore from '../avalanche';
 import { APIBase, RequestResponseData } from './apibase';
-
-/**
- * @ignore
- */
-const bintools = BinTools.getInstance();
+import { Headers } from './types';
 
 export class JRPCAPI extends APIBase {
   protected jrpcVersion:string = '2.0';
@@ -22,8 +17,8 @@ export class JRPCAPI extends APIBase {
     method:string,
     params?:Array<object> | object,
     baseurl?:string,
-    headers?: object
-    ):Promise<RequestResponseData> => {
+    headers?: Headers,
+  ):Promise<RequestResponseData> => {
     const ep = baseurl || this.baseurl;
     const rpc:any = {};
     rpc.id = this.rpcid;
@@ -40,19 +35,19 @@ export class JRPCAPI extends APIBase {
       rpc.jsonrpc = this.jrpcVersion;
     }
 
-    let headrs:object = { 'Content-Type': 'application/json;charset=UTF-8' };
-    if(headers) {
-      headrs = {...headrs, ...headers};
+    let headrs:Headers = { 'Content-Type': 'application/json;charset=UTF-8' };
+    if (headers) {
+      headrs = { ...headrs, ...headers };
     }
 
     let baseURL: string = `${this.core.getProtocol()}://${this.core.getIP()}`;
     const port: number = this.core.getPort();
-    if(port != undefined && typeof port === 'number' && port >= 0) {
+    if (port !== undefined && typeof port === 'number' && port >= 0) {
       baseURL = `${baseURL}:${port}`;
     }
 
     const axConf:AxiosRequestConfig = {
-      baseURL: baseURL,
+      baseURL,
       responseType: 'json',
     };
 
@@ -89,8 +84,3 @@ export class JRPCAPI extends APIBase {
     this.rpcid = 1;
   }
 }
-
-
-
-
-

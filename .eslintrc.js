@@ -6,6 +6,7 @@ module.exports = {
   rules: {
 // use @typescript-eslint/no-unused-vars instead
 'no-unused-vars': 'off',
+'import/prefer-default-export': 'off',
 'max-classes-per-file': 'off',
 'no-underscore-dangle': 'off',
 // enable for-in and for-of
