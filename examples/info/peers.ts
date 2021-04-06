@@ -8,8 +8,8 @@ const networkID: number = 12345;
 const avalanche: Avalanche = new Avalanche(ip, port, protocol, networkID);
 const info = new InfoAPI(avalanche);
 
-const main = async (): Promise<any> => {
-  const peers: any[] = await info.peers();
+const main = async () => {
+  const peers = await info.peers();
   console.log(peers);
 };
 

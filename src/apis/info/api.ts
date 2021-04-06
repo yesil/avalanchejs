@@ -6,6 +6,7 @@ import BN from 'bn.js';
 import AvalancheCore from '../../avalanche';
 import { JRPCAPI } from '../../common/jrpcapi';
 import { RequestResponseData } from '../../common/apibase';
+import { Peer } from 'src/common/types';
 
 /**
  * Class for interacting with a node's InfoAPI.
@@ -98,7 +99,7 @@ export class InfoAPI extends JRPCAPI {
    *
    * @returns Promise for the list of connected peers in <ip>:<port> format.
    */
-  peers = async ():Promise<Array<string>> => this.callMethod('info.peers')
+  peers = async ():Promise<Array<Peer>> => this.callMethod('info.peers')
     .then((response:RequestResponseData) => response.data.result.peers);
 
   constructor(core:AvalancheCore, baseurl:string = '/ext/info') { super(core, baseurl); }
