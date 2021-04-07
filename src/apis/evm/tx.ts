@@ -4,16 +4,16 @@
  */
 
 import { Buffer } from 'buffer/';
+import createHash from 'create-hash';
 import BinTools from '../../utils/bintools';
 import { EVMConstants } from './constants';
 import { SelectCredentialClass } from './credentials';
 import { KeyChain, KeyPair } from './keychain';
 import { Credential } from '../../common/credentials';
-import { 
-  EVMStandardTx, 
-  EVMStandardUnsignedTx 
+import {
+  EVMStandardTx,
+  EVMStandardUnsignedTx,
 } from '../../common/evmtx';
-import createHash from 'create-hash';
 import { EVMBaseTx } from './basetx';
 import { ImportTx } from './importtx';
 import { ExportTx } from './exporttx';
@@ -34,26 +34,27 @@ const bintools: BinTools = BinTools.getInstance();
 export const SelectTxClass = (txTypeID: number, ...args: any[]): EVMBaseTx => {
   if (txTypeID === EVMConstants.IMPORTTX) {
     return new ImportTx(...args);
-  } else if (txTypeID === EVMConstants.EXPORTTX) {
+  } if (txTypeID === EVMConstants.EXPORTTX) {
     return new ExportTx(...args);
   }
   /* istanbul ignore next */
-  throw new Error("Error - SelectTxClass: unknown txType");
+  throw new Error('Error - SelectTxClass: unknown txType');
 };
 
 export class UnsignedTx extends EVMStandardUnsignedTx<KeyPair, KeyChain, EVMBaseTx> {
-  protected _typeName = "UnsignedTx";
+  protected _typeName = 'UnsignedTx';
+
   protected _typeID = undefined;
 
-  //serialize is inherited
+  // serialize is inherited
 
-  deserialize(fields: object, encoding: SerializedEncoding = "hex") {
+  deserialize(fields: object, encoding: SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.transaction = SelectTxClass(fields["transaction"]["_typeID"]);
-    this.transaction.deserialize(fields["transaction"], encoding);
+    this.transaction = SelectTxClass(fields.transaction._typeID);
+    this.transaction.deserialize(fields.transaction, encoding);
   }
 
-  getTransaction(): EVMBaseTx{
+  getTransaction(): EVMBaseTx {
     return this.transaction as EVMBaseTx;
   }
 
@@ -65,7 +66,7 @@ export class UnsignedTx extends EVMStandardUnsignedTx<KeyPair, KeyChain, EVMBase
     this.transaction = SelectTxClass(txtype);
     return this.transaction.fromBuffer(bytes, offset);
   }
-  
+
   /**
    * Signs this [[UnsignedTx]] and returns signed [[StandardTx]]
    *
@@ -82,25 +83,26 @@ export class UnsignedTx extends EVMStandardUnsignedTx<KeyPair, KeyChain, EVMBase
 }
 
 export class Tx extends EVMStandardTx<KeyPair, KeyChain, UnsignedTx> {
-  protected _typeName = "Tx";
+  protected _typeName = 'Tx';
+
   protected _typeID = undefined;
 
-  //serialize is inherited
+  // serialize is inherited
 
-  deserialize(fields: object, encoding: SerializedEncoding = "hex") {
+  deserialize(fields: object, encoding: SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
     this.unsignedTx = new UnsignedTx();
-    this.unsignedTx.deserialize(fields["unsignedTx"], encoding);
+    this.unsignedTx.deserialize(fields.unsignedTx, encoding);
     this.credentials = [];
-    for(let i: number = 0; i < fields["credentials"].length; i++){
-      const cred: Credential = SelectCredentialClass(fields["credentials"][i]["_typeID"]);
-      cred.deserialize(fields["credentials"][i], encoding);
+    for (let i: number = 0; i < fields.credentials.length; i++) {
+      const cred: Credential = SelectCredentialClass(fields.credentials[i]._typeID);
+      cred.deserialize(fields.credentials[i], encoding);
       this.credentials.push(cred);
     }
   }
 
   /**
-   * Takes a {@link https://github.com/feross/buffer|Buffer} containing an [[Tx]], parses it, 
+   * Takes a {@link https://github.com/feross/buffer|Buffer} containing an [[Tx]], parses it,
    * populates the class, and returns the length of the Tx in bytes.
    *
    * @param bytes A {@link https://github.com/feross/buffer|Buffer} containing a raw [[Tx]]
@@ -123,5 +125,4 @@ export class Tx extends EVMStandardTx<KeyPair, KeyChain, UnsignedTx> {
     }
     return offset;
   }
-
 }

@@ -12,7 +12,7 @@ const bintools: BinTools = BinTools.getInstance();
 
 describe('EVMAPI', () => {
   const networkid: number = 12345;
-  const blockchainid: string = Defaults.network[networkid].C.blockchainID;
+  const blockchainid: string = Defaults.network.get(networkid).C.blockchainID;
   const ip: string = '127.0.0.1';
   const port: number = 9650;
   const protocol: string = 'https';
@@ -168,8 +168,8 @@ describe('EVMAPI', () => {
   });
 
   test('refreshBlockchainID', async () => {
-    const n5bcID: string = Defaults.network[5].C["blockchainID"];
-    const n12345bcID: string = Defaults.network[12345].C["blockchainID"];
+    const n5bcID: string = Defaults.network.get(5).C["blockchainID"];
+    const n12345bcID: string = Defaults.network.get(12345).C["blockchainID"];
     const testAPI: EVMAPI = new EVMAPI(avalanche, '/ext/bc/C/avax', n5bcID);
     const bc1: string = testAPI.getBlockchainID();
     expect(bc1).toBe(n5bcID);

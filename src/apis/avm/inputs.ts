@@ -26,19 +26,20 @@ export const SelectInputClass = (inputid:number, ...args:Array<any>):Input => {
     return new SECPTransferInput(...args);
   }
   /* istanbul ignore next */
-  throw new Error("Error - SelectInputClass: unknown inputid");
+  throw new Error('Error - SelectInputClass: unknown inputid');
 };
 
 export class TransferableInput extends StandardTransferableInput {
-  protected _typeName = "TransferableInput";
+  protected _typeName = 'TransferableInput';
+
   protected _typeID = undefined;
 
-  //serialize is inherited
+  // serialize is inherited
 
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.input = SelectInputClass(fields["input"]["_typeID"]);
-    this.input.deserialize(fields["input"], encoding);
+    this.input = SelectInputClass(fields.input._typeID);
+    this.input.deserialize(fields.input, encoding);
   }
 
   /**
@@ -60,14 +61,14 @@ export class TransferableInput extends StandardTransferableInput {
     this.input = SelectInputClass(inputid);
     return this.input.fromBuffer(bytes, offset);
   }
-  
 }
 
 export abstract class AmountInput extends StandardAmountInput {
-  protected _typeName = "AmountInput";
+  protected _typeName = 'AmountInput';
+
   protected _typeID = undefined;
 
-  //serialize and deserialize both are inherited
+  // serialize and deserialize both are inherited
 
   select(id:number, ...args: any[]):Input {
     return SelectInputClass(id, ...args);
@@ -75,16 +76,18 @@ export abstract class AmountInput extends StandardAmountInput {
 }
 
 export class SECPTransferInput extends AmountInput {
-  protected _typeName = "SECPTransferInput";
+  protected _typeName = 'SECPTransferInput';
+
   protected _codecID = AVMConstants.LATESTCODEC;
+
   protected _typeID = this._codecID === 0 ? AVMConstants.SECPINPUTID : AVMConstants.SECPINPUTID_CODECONE;
 
-  //serialize and deserialize both are inherited
+  // serialize and deserialize both are inherited
 
   setCodecID(codecID: number): void {
-    if(codecID !== 0 && codecID !== 1) {
+    if (codecID !== 0 && codecID !== 1) {
       /* istanbul ignore next */
-        throw new Error("Error - SECPTransferInput.setCodecID: invalid codecID. Valid codecIDs are 0 and 1.");
+      throw new Error('Error - SECPTransferInput.setCodecID: invalid codecID. Valid codecIDs are 0 and 1.');
     }
     this._codecID = codecID;
     this._typeID = this._codecID === 0 ? AVMConstants.SECPINPUTID : AVMConstants.SECPINPUTID_CODECONE;
@@ -98,19 +101,19 @@ export class SECPTransferInput extends AmountInput {
   }
 
   getCredentialID(): number {
-    if(this._codecID === 0) {
+    if (this._codecID === 0) {
       return AVMConstants.SECPCREDENTIAL;
-    } else if (this._codecID === 1) {
+    } if (this._codecID === 1) {
       return AVMConstants.SECPCREDENTIAL_CODECONE;
     }
   }
 
-  create(...args:any[]):this{
+  create(...args:any[]):this {
     return new SECPTransferInput(...args) as this;
   }
 
   clone():this {
-    const newout:SECPTransferInput = this.create()
+    const newout:SECPTransferInput = this.create();
     newout.fromBuffer(this.toBuffer());
     return newout as this;
   }

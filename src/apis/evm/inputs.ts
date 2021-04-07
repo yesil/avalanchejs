@@ -3,16 +3,16 @@
  * @module API-EVM-Inputs
  */
 import { Buffer } from 'buffer/';
+import BN from 'bn.js';
 import BinTools from '../../utils/bintools';
 import { EVMConstants } from './constants';
-import { 
-  Input, 
-  StandardTransferableInput, 
-  StandardAmountInput 
+import {
+  Input,
+  StandardTransferableInput,
+  StandardAmountInput,
 } from '../../common/input';
 import { SerializedEncoding } from '../../utils/serialization';
 import { EVMOutput } from './outputs';
-import BN from 'bn.js';
 import { SigIdx } from '../../common/credentials';
 
 /**
@@ -32,19 +32,20 @@ export const SelectInputClass = (inputID: number, ...args: any[]): Input => {
     return new SECPTransferInput(...args);
   }
   /* istanbul ignore next */
-  throw new Error("Error - SelectInputClass: unknown inputID");
+  throw new Error('Error - SelectInputClass: unknown inputID');
 };
 
 export class TransferableInput extends StandardTransferableInput {
-  protected _typeName = "TransferableInput";
+  protected _typeName = 'TransferableInput';
+
   protected _typeID = undefined;
 
-  //serialize is inherited
+  // serialize is inherited
 
-  deserialize(fields: object, encoding: SerializedEncoding = "hex") {
+  deserialize(fields: object, encoding: SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.input = SelectInputClass(fields["input"]["_typeID"]);
-    this.input.deserialize(fields["input"], encoding);
+    this.input = SelectInputClass(fields.input._typeID);
+    this.input.deserialize(fields.input, encoding);
   }
 
   /**
@@ -66,14 +67,14 @@ export class TransferableInput extends StandardTransferableInput {
     this.input = SelectInputClass(inputid);
     return this.input.fromBuffer(bytes, offset);
   }
-  
 }
 
 export abstract class AmountInput extends StandardAmountInput {
-  protected _typeName = "AmountInput";
+  protected _typeName = 'AmountInput';
+
   protected _typeID = undefined;
 
-  //serialize and deserialize both are inherited
+  // serialize and deserialize both are inherited
 
   select(id: number, ...args: any[]): Input {
     return SelectInputClass(id, ...args);
@@ -81,10 +82,11 @@ export abstract class AmountInput extends StandardAmountInput {
 }
 
 export class SECPTransferInput extends AmountInput {
-  protected _typeName = "SECPTransferInput";
+  protected _typeName = 'SECPTransferInput';
+
   protected _typeID = EVMConstants.SECPINPUTID;
 
-  //serialize and deserialize both are inherited
+  // serialize and deserialize both are inherited
 
   /**
      * Returns the inputID for this input
@@ -95,12 +97,12 @@ export class SECPTransferInput extends AmountInput {
 
   getCredentialID = (): number => EVMConstants.SECPCREDENTIAL;
 
-  create(...args: any[]): this{
+  create(...args: any[]): this {
     return new SECPTransferInput(...args) as this;
   }
 
   clone(): this {
-    const newout: SECPTransferInput = this.create()
+    const newout: SECPTransferInput = this.create();
     newout.fromBuffer(this.toBuffer());
     return newout as this;
   }
@@ -108,8 +110,11 @@ export class SECPTransferInput extends AmountInput {
 
 export class EVMInput extends EVMOutput {
   protected nonce: Buffer = Buffer.alloc(8);
+
   protected nonceValue: BN = new BN(0);
+
   protected sigCount: Buffer = Buffer.alloc(4);
+
   protected sigIdxs: SigIdx[] = []; // idxs of signers from utxo
 
   /**
@@ -133,20 +138,19 @@ export class EVMInput extends EVMOutput {
     this.sigCount.writeUInt32BE(this.sigIdxs.length, 0);
   };
 
-
   /**
    * Returns the nonce as a {@link https://github.com/indutny/bn.js/|BN}.
    */
   getNonce = (): BN => this.nonceValue.clone();
- 
+
   /**
    * Returns a {@link https://github.com/feross/buffer|Buffer} representation of the [[EVMOutput]].
    */
   toBuffer(): Buffer {
-    let superbuff: Buffer = super.toBuffer();
-    let bsize: number = superbuff.length + this.nonce.length;
-    let barr: Buffer[] = [superbuff, this.nonce];
-    return Buffer.concat(barr,bsize);
+    const superbuff: Buffer = super.toBuffer();
+    const bsize: number = superbuff.length + this.nonce.length;
+    const barr: Buffer[] = [superbuff, this.nonce];
+    return Buffer.concat(barr, bsize);
   }
 
   getCredentialID = (): number => EVMConstants.SECPCREDENTIAL;
@@ -171,7 +175,7 @@ export class EVMInput extends EVMOutput {
     return bintools.bufferToB58(this.toBuffer());
   }
 
-  create(...args: any[]): this{
+  create(...args: any[]): this {
     return new EVMInput(...args) as this;
   }
 
@@ -190,10 +194,10 @@ export class EVMInput extends EVMOutput {
    * @param nonce A {@link https://github.com/indutny/bn.js/|BN} or a number representing the nonce.
    */
   constructor(
-    address: Buffer | string = undefined, 
-    amount: BN | number = undefined, 
+    address: Buffer | string = undefined,
+    amount: BN | number = undefined,
     assetID: Buffer | string = undefined,
-    nonce: BN | number = undefined
+    nonce: BN | number = undefined,
   ) {
     super(address, amount, assetID);
 
@@ -210,4 +214,4 @@ export class EVMInput extends EVMOutput {
       this.nonce = bintools.fromBNToBuffer(n, 8);
     }
   }
-}  
+}

@@ -9,26 +9,26 @@ import AvalancheCore from '../../avalanche';
 import { JRPCAPI } from '../../common/jrpcapi';
 import { RequestResponseData } from '../../common/apibase';
 import BinTools from '../../utils/bintools';
-import { 
+import {
   UTXOSet,
-  UTXO 
+  UTXO,
 } from './utxos';
 import { KeyChain } from './keychain';
-import { 
-  Defaults, 
-  PrimaryAssetAlias 
+import {
+  Defaults,
+  PrimaryAssetAlias,
 } from '../../utils/constants';
 import { Tx, UnsignedTx } from './tx';
 import { EVMConstants } from './constants';
-import { 
+import {
   Asset,
-  Index, 
-  UTXOResponse 
-} from './../../common/interfaces'
+  Index,
+  UTXOResponse,
+} from '../../common/interfaces';
 import { EVMInput } from './inputs';
-import { 
-  SECPTransferOutput, 
-  TransferableOutput 
+import {
+  SECPTransferOutput,
+  TransferableOutput,
 } from './outputs';
 import { ExportTx } from './exporttx';
 
@@ -38,7 +38,7 @@ import { ExportTx } from './exporttx';
 const bintools: BinTools = BinTools.getInstance();
 
 /**
- * Class for interacting with a node's EVMAPI 
+ * Class for interacting with a node's EVMAPI
  *
  * @category RPCAPIs
  *
@@ -64,31 +64,29 @@ export class EVMAPI extends JRPCAPI {
    * @returns The alias for the blockchainID
    */
   getBlockchainAlias = (): string => {
-    if(typeof this.blockchainAlias === "undefined"){
+    if (typeof this.blockchainAlias === 'undefined') {
       const netID: number = this.core.getNetworkID();
       if (netID in Defaults.network && this.blockchainID in Defaults.network[netID]) {
         this.blockchainAlias = Defaults.network[netID][this.blockchainID].alias;
         return this.blockchainAlias;
-      } else {
-        /* istanbul ignore next */
-        return undefined;
       }
-    } 
+      /* istanbul ignore next */
+      return undefined;
+    }
     return this.blockchainAlias;
   };
 
   /**
    * Sets the alias for the blockchainID.
-   * 
+   *
    * @param alias The alias for the blockchainID.
-   * 
+   *
    */
   setBlockchainAlias = (alias: string): string => {
     this.blockchainAlias = alias;
     /* istanbul ignore next */
     return undefined;
   };
-
 
   /**
    * Gets the blockchainID and returns it.
@@ -106,11 +104,11 @@ export class EVMAPI extends JRPCAPI {
    */
   refreshBlockchainID = (blockchainID: string = undefined): boolean => {
     const netID: number = this.core.getNetworkID();
-    if (typeof blockchainID === 'undefined' && typeof Defaults.network[netID] !== "undefined") {
-      this.blockchainID = Defaults.network[netID].C.blockchainID; //default to C-Chain
+    if (typeof blockchainID === 'undefined' && typeof Defaults.network[netID] !== 'undefined') {
+      this.blockchainID = Defaults.network.get(netID).C.blockchainID; // default to C-Chain
       return true;
-    } 
-    
+    }
+
     if (typeof blockchainID === 'string') {
       this.blockchainID = blockchainID;
       return true;
@@ -159,7 +157,7 @@ export class EVMAPI extends JRPCAPI {
     const tmpBaseURL: string = this.getBaseURL();
 
     // set base url to get asset description
-    this.setBaseURL("/ext/bc/X");
+    this.setBaseURL('/ext/bc/X');
     const response: RequestResponseData = await this.callMethod('avm.getAssetDescription', params);
 
     // set base url back what it originally was
@@ -169,14 +167,14 @@ export class EVMAPI extends JRPCAPI {
       symbol: response.data.result.symbol,
       assetID: bintools.cb58Decode(response.data.result.assetID),
       denomination: parseInt(response.data.result.denomination, 10),
-    }
+    };
   };
-  
+
   /**
    * Fetches the AVAX AssetID and returns it in a Promise.
    *
    * @param refresh This function caches the response. Refresh = true will bust the cache.
-   * 
+   *
    * @returns The the provided string representing the AVAX AssetID
    */
   getAVAXAssetID = async (refresh: boolean = false): Promise<Buffer> => {
@@ -186,29 +184,27 @@ export class EVMAPI extends JRPCAPI {
     }
     return this.AVAXAssetID;
   };
-  
+
   /**
    * Overrides the defaults and sets the cache to a specific AVAX AssetID
-   * 
+   *
    * @param avaxAssetID A cb58 string or Buffer representing the AVAX AssetID
-   * 
+   *
    * @returns The the provided string representing the AVAX AssetID
    */
   setAVAXAssetID = (avaxAssetID: string | Buffer) => {
-    if(typeof avaxAssetID === "string") {
+    if (typeof avaxAssetID === 'string') {
       avaxAssetID = bintools.cb58Decode(avaxAssetID);
     }
     this.AVAXAssetID = avaxAssetID;
-  }
+  };
 
   /**
    * Gets the default tx fee for this chain.
    *
    * @returns The default tx fee as a {@link https://github.com/indutny/bn.js/|BN}
    */
-  getDefaultTxFee = (): BN => {
-    return this.core.getNetworkID() in Defaults.network ? new BN(Defaults.network[this.core.getNetworkID()]["C"]["txFee"]) : new BN(0);
-  }
+  getDefaultTxFee = (): BN => (this.core.getNetworkID() in Defaults.network ? new BN(Defaults.network[this.core.getNetworkID()].C.txFee) : new BN(0));
 
   /**
    * Gets the tx fee for this chain.
@@ -216,11 +212,11 @@ export class EVMAPI extends JRPCAPI {
    * @returns The tx fee as a {@link https://github.com/indutny/bn.js/|BN}
    */
   getTxFee = (): BN => {
-    if(typeof this.txFee === "undefined") {
+    if (typeof this.txFee === 'undefined') {
       this.txFee = this.getDefaultTxFee();
     }
     return this.txFee;
-  }
+  };
 
   /**
    * Send ANT (Avalanche Native Token) assets including AVAX from the C-Chain to an account on the X-Chain.
@@ -229,31 +225,31 @@ export class EVMAPI extends JRPCAPI {
     *
     * @param username The Keystore user that controls the X-Chain account specified in `to`
     * @param password The password of the Keystore user
-    * @param to The account on the X-Chain to send the AVAX to. 
+    * @param to The account on the X-Chain to send the AVAX to.
     * @param amount Amount of asset to export as a {@link https://github.com/indutny/bn.js/|BN}
     * @param assetID The asset id which is being sent
     *
     * @returns String representing the transaction id
     */
   export = async (
-    username: string, 
-    password: string, 
-    to: string, 
-    amount: BN, 
-    assetID: string
+    username: string,
+    password: string,
+    to: string,
+    amount: BN,
+    assetID: string,
   ):Promise<string> => {
     const params: {
-      username: string, 
-      password: string, 
-      to: string, 
-      amount: string, 
+      username: string,
+      password: string,
+      to: string,
+      amount: string,
       assetID: string
     } = {
       to,
       amount: amount.toString(10),
       username,
       password,
-      assetID
+      assetID,
     };
     return this.callMethod('avax.export', params).then((response: RequestResponseData) => response.data.result.txID);
   };
@@ -271,15 +267,15 @@ export class EVMAPI extends JRPCAPI {
     * @returns String representing the transaction id
     */
   exportAVAX = async (
-    username: string, 
-    password: string, 
-    to: string, 
-    amount: BN
+    username: string,
+    password: string,
+    to: string,
+    amount: BN,
   ): Promise<string> => {
     const params: {
-      username: string, 
-      password: string, 
-      to: string, 
+      username: string,
+      password: string,
+      to: string,
       amount: string
     } = {
       to,
@@ -294,7 +290,7 @@ export class EVMAPI extends JRPCAPI {
    * Retrieves the UTXOs related to the addresses provided from the node's `getUTXOs` method.
    *
    * @param addresses An array of addresses as cb58 strings or addresses as {@link https://github.com/feross/buffer|Buffer}s
-   * @param sourceChain A string for the chain to look for the UTXO's. Default is to use this chain, but if exported UTXOs exist 
+   * @param sourceChain A string for the chain to look for the UTXO's. Default is to use this chain, but if exported UTXOs exist
    * from other chains, this can used to pull them instead.
    * @param limit Optional. Returns at most [limit] addresses. If [limit] == 0 or > [maxUTXOsToFetch], fetches up to [maxUTXOsToFetch].
    * @param startIndex Optional. [StartIndex] defines where to start fetching UTXOs (for pagination.)
@@ -305,36 +301,36 @@ export class EVMAPI extends JRPCAPI {
     addresses: string[] | string,
     sourceChain: string = undefined,
     limit: number = 0,
-    startIndex: Index = undefined
+    startIndex: Index = undefined,
   ): Promise<{
     numFetched:number,
     utxos,
     endIndex: Index
   }> => {
-    if(typeof addresses === "string") {
+    if (typeof addresses === 'string') {
       addresses = [addresses];
     }
 
     const params: any = {
-      addresses: addresses,
-      limit
+      addresses,
+      limit,
     };
-    if(typeof startIndex !== "undefined" && startIndex) {
+    if (typeof startIndex !== 'undefined' && startIndex) {
       params.startIndex = startIndex;
     }
 
-    if(typeof sourceChain !== "undefined") {
+    if (typeof sourceChain !== 'undefined') {
       params.sourceChain = sourceChain;
     }
 
     return this.callMethod('avax.getUTXOs', params).then((response: RequestResponseData) => {
       const utxos: UTXOSet = new UTXOSet();
-      let data: any = response.data.result.utxos;
+      const data: any = response.data.result.utxos;
       utxos.addArray(data, false);
       response.data.result.utxos = utxos;
       return response.data.result;
     });
-  }
+  };
 
   /**
    * Send ANT (Avalanche Native Token) assets including AVAX from an account on the X-Chain to an address on the C-Chain. This transaction
@@ -343,23 +339,23 @@ export class EVMAPI extends JRPCAPI {
    *
    * @param username The Keystore user that controls the account specified in `to`
    * @param password The password of the Keystore user
-   * @param to The address of the account the asset is sent to. 
+   * @param to The address of the account the asset is sent to.
    * @param sourceChain The chainID where the funds are coming from. Ex: "X"
    *
    * @returns Promise for a string for the transaction, which should be sent to the network
    * by calling issueTx.
    */
   import = async (
-    username: string, 
-    password: string, 
-    to: string, 
-    sourceChain: string
+    username: string,
+    password: string,
+    to: string,
+    sourceChain: string,
   )
   : Promise<string> => {
     const params: {
-      username: string, 
-      password: string, 
-      to: string, 
+      username: string,
+      password: string,
+      to: string,
       sourceChain: string
     } = {
       to,
@@ -386,15 +382,16 @@ export class EVMAPI extends JRPCAPI {
    * by calling issueTx.
    */
   importAVAX = async (
-    username: string, 
-    password: string, 
-    to: string, 
-    sourceChain: string) : 
+    username: string,
+    password: string,
+    to: string,
+    sourceChain: string,
+  ) :
   Promise<string> => {
     const params: {
-      username: string, 
-      password: string, 
-      to: string, 
+      username: string,
+      password: string,
+      to: string,
       sourceChain: string
     } = {
       to,
@@ -416,13 +413,13 @@ export class EVMAPI extends JRPCAPI {
    * @returns The address for the imported private key.
    */
   importKey = async (
-    username: string, 
-    password: string, 
-    privateKey: string
+    username: string,
+    password: string,
+    privateKey: string,
   ): Promise<string> => {
     const params: {
-      username: string, 
-      password: string, 
+      username: string,
+      password: string,
       privateKey: string
     } = {
       username,
@@ -471,13 +468,13 @@ export class EVMAPI extends JRPCAPI {
    * @returns Promise with the decrypted private key as store in the database
    */
   exportKey = async (
-    username: string, 
-    password: string, 
-    address: string
+    username: string,
+    password: string,
+    address: string,
   ): Promise<string> => {
     const params: {
-      username: string, 
-      password: string, 
+      username: string,
+      password: string,
       address: string
     } = {
       username,
@@ -503,21 +500,21 @@ export class EVMAPI extends JRPCAPI {
    * This helper exists because the endpoint API should be the primary point of entry for most functionality.
    */
   buildImportTx = async (
-    utxoset: UTXOSet, 
+    utxoset: UTXOSet,
     toAddress: string,
     ownerAddresses: string[],
     sourceChain: Buffer | string,
-    fromAddresses: string[]
+    fromAddresses: string[],
   ): Promise<UnsignedTx> => {
     const from: Buffer[] = this._cleanAddressArray(fromAddresses, 'buildImportTx').map((a) => bintools.stringToAddress(a));
-    let srcChain: string = undefined;
+    let srcChain: string;
 
-    if(typeof sourceChain === "string") {
+    if (typeof sourceChain === 'string') {
       // if there is a sourceChain passed in and it's a string then save the string value and cast the original
       // variable from a string to a Buffer
       srcChain = sourceChain;
       sourceChain = bintools.cb58Decode(sourceChain);
-    } else if(typeof sourceChain === "undefined" || !(sourceChain instanceof Buffer)) {
+    } else if (typeof sourceChain === 'undefined' || !(sourceChain instanceof Buffer)) {
       // if there is no sourceChain passed in or the sourceChain is any data type other than a Buffer then throw an error
       throw new Error('Error - EVMAPI.buildImportTx: sourceChain is undefined or invalid sourceChain type.');
     }
@@ -526,19 +523,19 @@ export class EVMAPI extends JRPCAPI {
     const avaxAssetID: Buffer = await this.getAVAXAssetID();
     const atomics: UTXO[] = atomicUTXOs.getAllUTXOs();
 
-    if(atomics.length === 0){
-      throw new Error("Error - EVMAPI.buildImportTx: no atomic utxos to import");
+    if (atomics.length === 0) {
+      throw new Error('Error - EVMAPI.buildImportTx: no atomic utxos to import');
     }
 
     const builtUnsignedTx: UnsignedTx = utxoset.buildImportTx(
       this.core.getNetworkID(),
-      bintools.cb58Decode(this.blockchainID), 
+      bintools.cb58Decode(this.blockchainID),
       [toAddress],
       from,
       atomics,
       sourceChain,
       this.getTxFee(),
-      avaxAssetID
+      avaxAssetID,
     );
 
     return builtUnsignedTx;
@@ -564,37 +561,36 @@ export class EVMAPI extends JRPCAPI {
     amount: BN,
     assetID: Buffer | string,
     destinationChain: Buffer | string,
-    fromAddressHex: string, 
-    fromAddressBech: string, 
+    fromAddressHex: string,
+    fromAddressBech: string,
     toAddresses: string[],
     nonce: number = 0,
-    locktime: BN = new BN(0), 
-    threshold: number = 1
-  ): Promise<UnsignedTx> => { 
-
-    let prefixes: object = {};
+    locktime: BN = new BN(0),
+    threshold: number = 1,
+  ): Promise<UnsignedTx> => {
+    const prefixes: object = {};
     toAddresses.map((address: string) => {
-      prefixes[address.split("-")[0]] = true;
+      prefixes[address.split('-')[0]] = true;
     });
-    if(Object.keys(prefixes).length !== 1){
-      throw new Error("Error - EVMAPI.buildExportTx: To addresses must have the same chainID prefix.");
+    if (Object.keys(prefixes).length !== 1) {
+      throw new Error('Error - EVMAPI.buildExportTx: To addresses must have the same chainID prefix.');
     }
-    
-    if(typeof destinationChain === "undefined") {
-      throw new Error("Error - EVMAPI.buildExportTx: Destination ChainID is undefined.");
-    } else if (typeof destinationChain === "string") {
-      destinationChain = bintools.cb58Decode(destinationChain); 
-    } else if(!(destinationChain instanceof Buffer)) {
-      throw new Error("Error - EVMAPI.buildExportTx: Invalid destinationChain type");
+
+    if (typeof destinationChain === 'undefined') {
+      throw new Error('Error - EVMAPI.buildExportTx: Destination ChainID is undefined.');
+    } else if (typeof destinationChain === 'string') {
+      destinationChain = bintools.cb58Decode(destinationChain);
+    } else if (!(destinationChain instanceof Buffer)) {
+      throw new Error('Error - EVMAPI.buildExportTx: Invalid destinationChain type');
     }
-    if(destinationChain.length !== 32) {
-      throw new Error("Error - EVMAPI.buildExportTx: Destination ChainID must be 32 bytes in length.");
+    if (destinationChain.length !== 32) {
+      throw new Error('Error - EVMAPI.buildExportTx: Destination ChainID must be 32 bytes in length.');
     }
     const fee: BN = this.getTxFee();
 
-    const assetDescription: any = await this.getAssetDescription("AVAX");
+    const assetDescription: any = await this.getAssetDescription('AVAX');
     const evmInputs: EVMInput[] = [];
-    if(bintools.cb58Encode(assetDescription.assetID) === assetID) {
+    if (bintools.cb58Encode(assetDescription.assetID) === assetID) {
       const evmInput: EVMInput = new EVMInput(fromAddressHex, amount.add(fee), assetID, nonce);
       evmInput.addSignatureIdx(0, bintools.stringToAddress(fromAddressBech));
       evmInputs.push(evmInput);
@@ -625,11 +621,11 @@ export class EVMAPI extends JRPCAPI {
     exportedOuts = exportedOuts.sort(TransferableOutput.comparator());
 
     const exportTx: ExportTx = new ExportTx(
-      this.core.getNetworkID(), 
-      bintools.cb58Decode(this.blockchainID), 
+      this.core.getNetworkID(),
+      bintools.cb58Decode(this.blockchainID),
       destinationChain,
       evmInputs,
-      exportedOuts
+      exportedOuts,
     );
 
     const unsignedTx: UnsignedTx = new UnsignedTx(exportTx);
@@ -654,7 +650,7 @@ export class EVMAPI extends JRPCAPI {
         if (typeof address === 'string') {
           if (typeof this.parseAddress(address as string) === 'undefined') {
             /* istanbul ignore next */
-            throw new Error("Error - Invalid address format");
+            throw new Error('Error - Invalid address format');
           }
           addrs.push(address as string);
         } else {
@@ -673,8 +669,8 @@ export class EVMAPI extends JRPCAPI {
    * @param baseurl Defaults to the string "/ext/bc/C/avax" as the path to blockchain's baseurl
    * @param blockchainID The Blockchain's ID. Defaults to an empty string: ''
    */
-  constructor(core: AvalancheCore, baseurl: string = '/ext/bc/C/avax', blockchainID: string = '') { 
-    super(core, baseurl); 
+  constructor(core: AvalancheCore, baseurl: string = '/ext/bc/C/avax', blockchainID: string = '') {
+    super(core, baseurl);
     this.blockchainID = blockchainID;
     const netID: number = core.getNetworkID();
     if (netID in Defaults.network && blockchainID in Defaults.network[netID]) {

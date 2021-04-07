@@ -63,7 +63,7 @@ export class AVMConstants {
   static EXPORTTX_CODECONE:number = 4;
 
   static SECPCREDENTIAL:number = 9;
-  
+
   static SECPCREDENTIAL_CODECONE:number = 65540;
 
   static NFTCREDENTIAL:number = 14;

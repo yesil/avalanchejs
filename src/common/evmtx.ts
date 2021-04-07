@@ -4,9 +4,9 @@
  */
 
 import { Buffer } from 'buffer/';
+import BN from 'bn.js';
 import BinTools from '../utils/bintools';
 import { Credential } from './credentials';
-import BN from 'bn.js';
 import { StandardKeyChain, StandardKeyPair } from './keychain';
 import { StandardAmountInput, StandardTransferableInput } from './input';
 import { StandardAmountOutput, StandardTransferableOutput } from './output';
@@ -22,26 +22,28 @@ const serializer: Serialization = Serialization.getInstance();
 /**
  * Class representing a base for all transactions.
  */
-export abstract class EVMStandardBaseTx<KPClass extends StandardKeyPair, KCClass extends StandardKeyChain<KPClass>> extends Serializable{
-  protected _typeName = "EVMStandardBaseTx";
+export abstract class EVMStandardBaseTx<KPClass extends StandardKeyPair, KCClass extends StandardKeyChain<KPClass>> extends Serializable {
+  protected _typeName = 'EVMStandardBaseTx';
+
   protected _typeID = undefined;
 
-  serialize(encoding: SerializedEncoding = "hex"): object {
-    let fields: object = super.serialize(encoding);
+  serialize(encoding: SerializedEncoding = 'hex'): object {
+    const fields: object = super.serialize(encoding);
     return {
       ...fields,
-      "networkid": serializer.encoder(this.networkid, encoding, "Buffer", "decimalString"),
-      "blockchainid": serializer.encoder(this.blockchainid, encoding, "Buffer", "cb58")
-    }
-  };
+      networkid: serializer.encoder(this.networkid, encoding, 'Buffer', 'decimalString'),
+      blockchainid: serializer.encoder(this.blockchainid, encoding, 'Buffer', 'cb58'),
+    };
+  }
 
-  deserialize(fields: object, encoding: SerializedEncoding = "hex") {
+  deserialize(fields: object, encoding: SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.networkid = serializer.decoder(fields["networkid"], encoding, "decimalString", "Buffer", 4);
-    this.blockchainid = serializer.decoder(fields["blockchainid"], encoding, "cb58", "Buffer", 32);
+    this.networkid = serializer.decoder(fields.networkid, encoding, 'decimalString', 'Buffer', 4);
+    this.blockchainid = serializer.decoder(fields.blockchainid, encoding, 'cb58', 'Buffer', 32);
   }
 
   protected networkid: Buffer = Buffer.alloc(4);
+
   protected blockchainid: Buffer = Buffer.alloc(32);
 
   /**
@@ -63,7 +65,7 @@ export abstract class EVMStandardBaseTx<KPClass extends StandardKeyPair, KCClass
    * Returns a {@link https://github.com/feross/buffer|Buffer} representation of the [[StandardBaseTx]].
    */
   toBuffer(): Buffer {
-    let bsize: number = this.networkid.length + this.blockchainid.length;
+    const bsize: number = this.networkid.length + this.blockchainid.length;
     const barr: Buffer[] = [this.networkid, this.blockchainid];
     const buff: Buffer = Buffer.concat(barr, bsize);
     return buff;
@@ -100,28 +102,30 @@ export abstract class EVMStandardBaseTx<KPClass extends StandardKeyPair, KCClass
 /**
  * Class representing an unsigned transaction.
  */
-export abstract class EVMStandardUnsignedTx<KPClass extends StandardKeyPair, 
-KCClass extends StandardKeyChain<KPClass>, 
+export abstract class EVMStandardUnsignedTx<KPClass extends StandardKeyPair,
+KCClass extends StandardKeyChain<KPClass>,
 SBTx extends EVMStandardBaseTx<KPClass, KCClass>
-> extends Serializable{
-  protected _typeName = "StandardUnsignedTx";
+> extends Serializable {
+  protected _typeName = 'StandardUnsignedTx';
+
   protected _typeID = undefined;
 
-  serialize(encoding: SerializedEncoding = "hex"): object {
-    let fields: object = super.serialize(encoding);
+  serialize(encoding: SerializedEncoding = 'hex'): object {
+    const fields: object = super.serialize(encoding);
     return {
       ...fields,
-      "codecid": serializer.encoder(this.codecid, encoding, "number", "decimalString", 2),
-      "transaction": this.transaction.serialize(encoding)
+      codecid: serializer.encoder(this.codecid, encoding, 'number', 'decimalString', 2),
+      transaction: this.transaction.serialize(encoding),
     };
-  };
+  }
 
-  deserialize(fields: object, encoding: SerializedEncoding = "hex") {
+  deserialize(fields: object, encoding: SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.codecid = serializer.decoder(fields["codecid"], encoding, "decimalString", "number");
+    this.codecid = serializer.decoder(fields.codecid, encoding, 'decimalString', 'number');
   }
 
   protected codecid: number = 0;
+
   protected transaction: SBTx;
 
   /**
@@ -133,27 +137,27 @@ SBTx extends EVMStandardBaseTx<KPClass, KCClass>
   * Returns the {@link https://github.com/feross/buffer|Buffer} representation of the CodecID
   */
   getCodecIDBuffer = (): Buffer => {
-    let codecBuf: Buffer = Buffer.alloc(2);
+    const codecBuf: Buffer = Buffer.alloc(2);
     codecBuf.writeUInt16BE(this.codecid, 0);
     return codecBuf;
-  } 
+  };
 
   /**
-   * Returns the inputTotal as a BN 
+   * Returns the inputTotal as a BN
    */
-  getInputTotal = (assetID: Buffer): BN=> {
+  getInputTotal = (assetID: Buffer): BN => {
     const ins: StandardTransferableInput[] = [];
     const aIDHex: string = assetID.toString('hex');
     let total: BN = new BN(0);
     ins.forEach((input: StandardTransferableInput) => {
       // only check StandardAmountInputs
-      if(input.getInput() instanceof StandardAmountInput && aIDHex === input.getAssetID().toString('hex')) {
+      if (input.getInput() instanceof StandardAmountInput && aIDHex === input.getAssetID().toString('hex')) {
         const i = input.getInput() as StandardAmountInput;
         total = total.add(i.getAmount());
       }
     });
     return total;
-  }
+  };
 
   /**
    * Returns the outputTotal as a BN
@@ -165,20 +169,18 @@ SBTx extends EVMStandardBaseTx<KPClass, KCClass>
 
     outs.forEach((out: StandardTransferableOutput) => {
       // only check StandardAmountOutput
-      if(out.getOutput() instanceof StandardAmountOutput && aIDHex === out.getAssetID().toString('hex')) {
+      if (out.getOutput() instanceof StandardAmountOutput && aIDHex === out.getAssetID().toString('hex')) {
         const output: StandardAmountOutput = out.getOutput() as StandardAmountOutput;
         total = total.add(output.getAmount());
       }
     });
     return total;
-  }
+  };
 
   /**
    * Returns the number of burned tokens as a BN
    */
-  getBurn = (assetID: Buffer): BN => {
-    return this.getInputTotal(assetID).sub(this.getOutputTotal(assetID));
-  }
+  getBurn = (assetID: Buffer): BN => this.getInputTotal(assetID).sub(this.getOutputTotal(assetID));
 
   /**
    * Returns the Transaction
@@ -203,9 +205,9 @@ SBTx extends EVMStandardBaseTx<KPClass, KCClass>
    * @returns A signed [[StandardTx]]
    */
   abstract sign(kc: KCClass): EVMStandardTx<
-    KPClass, 
-    KCClass, 
-    EVMStandardUnsignedTx<KPClass, KCClass, SBTx>
+  KPClass,
+  KCClass,
+  EVMStandardUnsignedTx<KPClass, KCClass, SBTx>
   >;
 
   constructor(transaction: SBTx = undefined, codecid: number = 0) {
@@ -219,34 +221,34 @@ SBTx extends EVMStandardBaseTx<KPClass, KCClass>
  * Class representing a signed transaction.
  */
 export abstract class EVMStandardTx<
-    KPClass extends StandardKeyPair, 
-    KCClass extends StandardKeyChain<KPClass>, 
+    KPClass extends StandardKeyPair,
+    KCClass extends StandardKeyChain<KPClass>,
     SUBTx extends EVMStandardUnsignedTx<
-        KPClass, 
-        KCClass, 
-        EVMStandardBaseTx<KPClass, KCClass>>
+    KPClass,
+    KCClass,
+    EVMStandardBaseTx<KPClass, KCClass>>
     > extends Serializable {
-  protected _typeName = "StandardTx";
+  protected _typeName = 'StandardTx';
+
   protected _typeID = undefined;
 
-  serialize(encoding: SerializedEncoding = "hex"): object {
-    let fields: object = super.serialize(encoding);
+  serialize(encoding: SerializedEncoding = 'hex'): object {
+    const fields: object = super.serialize(encoding);
     return {
       ...fields,
-      "unsignedTx": this.unsignedTx.serialize(encoding),
-      "credentials": this.credentials.map((c) => c.serialize(encoding))
-    }
-  };
+      unsignedTx: this.unsignedTx.serialize(encoding),
+      credentials: this.credentials.map((c) => c.serialize(encoding)),
+    };
+  }
 
   protected unsignedTx: SUBTx = undefined;
+
   protected credentials: Credential[] = [];
 
   /**
    * Returns the [[StandardUnsignedTx]]
    */
-  getUnsignedTx = (): SUBTx => {
-    return this.unsignedTx;
-  }
+  getUnsignedTx = (): SUBTx => this.unsignedTx;
 
   abstract fromBuffer(bytes: Buffer, offset?: number): number;
 

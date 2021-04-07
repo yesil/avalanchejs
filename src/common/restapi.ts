@@ -4,22 +4,17 @@
  */
 
 import { AxiosRequestConfig } from 'axios';
-import BinTools from '../utils/bintools';
 import AvalancheCore from '../avalanche';
 import { APIBase, RequestResponseData } from './apibase';
-
-/**
- * @ignore
- */
-const bintools = BinTools.getInstance();
+import { Headers } from './types';
 
 export class RESTAPI extends APIBase {
   protected contentType:string;
 
   protected acceptType:string;
 
-  protected prepHeaders = (contentType?:string, acceptType?:string):object => {
-    const headers:object = {};
+  protected prepHeaders = (contentType?:string, acceptType?:string): Headers => {
+    const headers: Headers = {};
     if (contentType !== undefined) {
       headers['Content-Type'] = contentType;
     } else {
@@ -27,25 +22,22 @@ export class RESTAPI extends APIBase {
     }
 
     if (acceptType !== undefined) {
-      headers["Accept"] = acceptType;
+      headers.Accept = acceptType;
     } else if (this.acceptType !== undefined) {
-      headers["Accept"] = this.acceptType;
+      headers.Accept = this.acceptType;
     }
     return headers;
-  }
+  };
 
-  protected axConf = ():AxiosRequestConfig => {
-    return  {
-      baseURL: `${this.core.getProtocol()}://${this.core.getIP()}:${this.core.getPort()}`,
-      responseType: 'json',
-    };
-
-  }
+  protected axConf = ():AxiosRequestConfig => ({
+    baseURL: `${this.core.getProtocol()}://${this.core.getIP()}:${this.core.getPort()}`,
+    responseType: 'json',
+  });
 
   get = async (baseurl?:string, contentType?:string, acceptType?:string):Promise<RequestResponseData> => {
     const ep:string = baseurl || this.baseurl;
 
-    let headers:object = this.prepHeaders(contentType, acceptType);
+    const headers = this.prepHeaders(contentType, acceptType);
 
     return this.core.get(ep, {}, headers, this.axConf()).then((resp:RequestResponseData) => resp);
   };
@@ -61,7 +53,7 @@ export class RESTAPI extends APIBase {
       rpc.params = params;
     }
 
-    const headers:object = this.prepHeaders(contentType, acceptType);
+    const headers = this.prepHeaders(contentType, acceptType);
 
     return this.core.post(ep, {}, JSON.stringify(rpc), headers, this.axConf())
       .then((resp:RequestResponseData) => resp);
@@ -81,7 +73,7 @@ export class RESTAPI extends APIBase {
       rpc.params = params;
     }
 
-    const headers:object = this.prepHeaders(contentType, acceptType);
+    const headers = this.prepHeaders(contentType, acceptType);
 
     return this.core.put(ep, {}, JSON.stringify(rpc), headers, this.axConf())
       .then((resp:RequestResponseData) => resp);
@@ -98,7 +90,7 @@ export class RESTAPI extends APIBase {
       rpc.params = params;
     }
 
-    const headers:object = this.prepHeaders(contentType, acceptType);
+    const headers = this.prepHeaders(contentType, acceptType);
 
     return this.core.delete(ep, {}, headers, this.axConf()).then((resp:RequestResponseData) => resp);
   };
@@ -114,7 +106,7 @@ export class RESTAPI extends APIBase {
       rpc.params = params;
     }
 
-    const headers:object = this.prepHeaders(contentType, acceptType);
+    const headers = this.prepHeaders(contentType, acceptType);
 
     return this.core.patch(ep, {}, JSON.stringify(rpc), headers, this.axConf())
       .then((resp:RequestResponseData) => resp);
@@ -148,9 +140,3 @@ export class RESTAPI extends APIBase {
     this.acceptType = acceptType;
   }
 }
-
-
-
-
-
-

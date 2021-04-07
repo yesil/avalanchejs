@@ -1,4 +1,4 @@
-import Avalanche from '../../src/Avalanche';
+import { Avalanche } from '../../src';
 import { InfoAPI } from '../../src/apis/info';
 
 const ip: string = 'localhost';
@@ -8,7 +8,7 @@ const networkID: number = 12345;
 const avalanche: Avalanche = new Avalanche(ip, port, protocol, networkID);
 const info = new InfoAPI(avalanche);
 
-const main = async (): Promise<any> => {
+const main = async () => {
   const getTxFeeResponse = await info.getTxFee();
   console.log(getTxFeeResponse);
 };

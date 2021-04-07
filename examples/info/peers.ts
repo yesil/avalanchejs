@@ -1,4 +1,4 @@
-import Avalanche from '../../src/Avalanche';
+import { Avalanche } from '../../src';
 import { InfoAPI } from '../../src/apis/info';
 
 const ip: string = 'localhost';

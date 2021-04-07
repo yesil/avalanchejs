@@ -3,13 +3,13 @@
  * @module API-AVM-Transactions
  */
 import { Buffer } from 'buffer/';
+import createHash from 'create-hash';
 import BinTools from '../../utils/bintools';
 import { AVMConstants } from './constants';
 import { SelectCredentialClass } from './credentials';
 import { KeyChain, KeyPair } from './keychain';
 import { Credential } from '../../common/credentials';
 import { StandardTx, StandardUnsignedTx } from '../../common/tx';
-import createHash from 'create-hash';
 import { BaseTx } from './basetx';
 import { CreateAssetTx } from './createassettx';
 import { OperationTx } from './operationtx';
@@ -33,33 +33,33 @@ const serializer = Serialization.getInstance();
 export const SelectTxClass = (txtype:number, ...args:Array<any>):BaseTx => {
   if (txtype === AVMConstants.BASETX) {
     return new BaseTx(...args);
-  } else if (txtype === AVMConstants.CREATEASSETTX) {
+  } if (txtype === AVMConstants.CREATEASSETTX) {
     return new CreateAssetTx(...args);
-  } else if (txtype === AVMConstants.OPERATIONTX) {
+  } if (txtype === AVMConstants.OPERATIONTX) {
     return new OperationTx(...args);
-  } else if (txtype === AVMConstants.IMPORTTX) {
+  } if (txtype === AVMConstants.IMPORTTX) {
     return new ImportTx(...args);
-  } else if (txtype === AVMConstants.EXPORTTX) {
+  } if (txtype === AVMConstants.EXPORTTX) {
     return new ExportTx(...args);
   }
   /* istanbul ignore next */
-  throw new Error("Error - SelectTxClass: unknown txtype");
+  throw new Error('Error - SelectTxClass: unknown txtype');
 };
 
-
 export class UnsignedTx extends StandardUnsignedTx<KeyPair, KeyChain, BaseTx> {
-  protected _typeName = "UnsignedTx";
+  protected _typeName = 'UnsignedTx';
+
   protected _typeID = undefined;
 
-  //serialize is inherited
+  // serialize is inherited
 
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.transaction = SelectTxClass(fields["transaction"]["_typeID"]);
-    this.transaction.deserialize(fields["transaction"], encoding);
+    this.transaction = SelectTxClass(fields.transaction._typeID);
+    this.transaction.deserialize(fields.transaction, encoding);
   }
 
-  getTransaction():BaseTx{
+  getTransaction():BaseTx {
     return this.transaction as BaseTx;
   }
 
@@ -71,7 +71,7 @@ export class UnsignedTx extends StandardUnsignedTx<KeyPair, KeyChain, BaseTx> {
     this.transaction = SelectTxClass(txtype);
     return this.transaction.fromBuffer(bytes, offset);
   }
-  
+
   /**
    * Signs this [[UnsignedTx]] and returns signed [[StandardTx]]
    *
@@ -85,23 +85,23 @@ export class UnsignedTx extends StandardUnsignedTx<KeyPair, KeyChain, BaseTx> {
     const sigs:Array<Credential> = this.transaction.sign(msg, kc);
     return new Tx(this, sigs);
   }
-
 }
 
 export class Tx extends StandardTx<KeyPair, KeyChain, UnsignedTx> {
-  protected _typeName = "Tx";
+  protected _typeName = 'Tx';
+
   protected _typeID = undefined;
 
-  //serialize is inherited
+  // serialize is inherited
 
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
     this.unsignedTx = new UnsignedTx();
-    this.unsignedTx.deserialize(fields["unsignedTx"], encoding);
+    this.unsignedTx.deserialize(fields.unsignedTx, encoding);
     this.credentials = [];
-    for(let i = 0; i < fields["credentials"].length; i++){
-      const cred:Credential = SelectCredentialClass(fields["credentials"][i]["_typeID"]);
-      cred.deserialize(fields["credentials"][i], encoding);
+    for (let i = 0; i < fields.credentials.length; i++) {
+      const cred:Credential = SelectCredentialClass(fields.credentials[i]._typeID);
+      cred.deserialize(fields.credentials[i], encoding);
       this.credentials.push(cred);
     }
   }
@@ -129,5 +129,4 @@ export class Tx extends StandardTx<KeyPair, KeyChain, UnsignedTx> {
     }
     return offset;
   }
-
 }

@@ -7,6 +7,8 @@ import { Headers } from './common';
 import { APIBase, RequestResponseData } from './common/apibase';
 import { getPreferredHRP } from './utils/helperfunctions';
 
+type AxiosRequestConfigOption = keyof AxiosRequestConfig;
+
 /**
  * AvalancheCore is middleware for interacting with Avalanche node RPC APIs.
  *
@@ -29,7 +31,7 @@ export default class AvalancheCore {
 
   protected url:string;
 
-  protected auth:string = undefined;
+  protected auth?:string;
 
   protected headers:{ [k: string]: string } = {};
 
@@ -151,7 +153,7 @@ export default class AvalancheCore {
    * @param key Config name
    * @param value Config value
    */
-  setRequestConfig = (key: string, value: string|boolean): void => {
+  setRequestConfig = (key: AxiosRequestConfigOption, value: string|boolean): void => {
     this.requestConfig[key] = value;
   };
 
@@ -160,7 +162,7 @@ export default class AvalancheCore {
    *
    * @param key Header name
    */
-  removeRequestConfig = (key: string):void => {
+  removeRequestConfig = (key: AxiosRequestConfigOption):void => {
     delete this.requestConfig[key];
   };
 
@@ -170,7 +172,7 @@ export default class AvalancheCore {
   removeAllRequestConfigs = ():void => {
     for (const prop in this.requestConfig) {
       if (Object.prototype.hasOwnProperty.call(this.requestConfig, prop)) {
-        delete this.requestConfig[prop];
+        delete this.requestConfig[prop as AxiosRequestConfigOption];
       }
     }
   };
@@ -219,7 +221,7 @@ export default class AvalancheCore {
    */
   addAPI = <GA extends APIBase>(apiName:string,
     ConstructorFN: new(avax:AvalancheCore, baseurl?:string, ...args:Array<any>) => GA,
-    baseurl:string = undefined,
+    baseurl?:string,
     ...args:Array<any>) => {
     if (typeof baseurl === 'undefined') {
       this.apis[apiName] = new ConstructorFN(this, undefined, ...args);
@@ -243,7 +245,7 @@ export default class AvalancheCore {
     getdata:object,
     postdata:string | object | ArrayBuffer | ArrayBufferView,
     headers:Headers = {},
-    axiosConfig:AxiosRequestConfig = undefined): Promise<RequestResponseData> => {
+    axiosConfig?:AxiosRequestConfig): Promise<RequestResponseData> => {
     let config:AxiosRequestConfig;
     if (axiosConfig) {
       config = {
@@ -289,7 +291,7 @@ export default class AvalancheCore {
   get = (baseurl:string,
     getdata:object,
     headers:Headers = {},
-    axiosConfig:AxiosRequestConfig = undefined)
+    axiosConfig?:AxiosRequestConfig)
   : Promise<RequestResponseData> => this._request('GET',
     baseurl,
     getdata,
@@ -312,7 +314,7 @@ export default class AvalancheCore {
   delete = (baseurl:string,
     getdata:object,
     headers:Headers = {},
-    axiosConfig:AxiosRequestConfig = undefined)
+    axiosConfig?:AxiosRequestConfig)
   : Promise<RequestResponseData> => this._request('DELETE',
     baseurl,
     getdata,
@@ -337,7 +339,7 @@ export default class AvalancheCore {
     getdata:object,
     postdata:string | object | ArrayBuffer | ArrayBufferView,
     headers:Headers = {},
-    axiosConfig:AxiosRequestConfig = undefined)
+    axiosConfig?:AxiosRequestConfig)
   : Promise<RequestResponseData> => this._request('POST',
     baseurl,
     getdata,
@@ -362,7 +364,7 @@ export default class AvalancheCore {
     getdata:object,
     postdata:string | object | ArrayBuffer | ArrayBufferView,
     headers:Headers = {},
-    axiosConfig:AxiosRequestConfig = undefined)
+    axiosConfig?:AxiosRequestConfig)
   : Promise<RequestResponseData> => this._request('PUT',
     baseurl,
     getdata,
@@ -387,7 +389,7 @@ export default class AvalancheCore {
     getdata:object,
     postdata:string | object | ArrayBuffer | ArrayBufferView,
     headers:Headers = {},
-    axiosConfig:AxiosRequestConfig = undefined)
+    axiosConfig?:AxiosRequestConfig)
   : Promise<RequestResponseData> => this._request('PATCH',
     baseurl,
     getdata,

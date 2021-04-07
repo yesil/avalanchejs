@@ -3,10 +3,10 @@
  * @module API-Info
  */
 import BN from 'bn.js';
+import { Peer } from 'src/common/types';
 import AvalancheCore from '../../avalanche';
 import { JRPCAPI } from '../../common/jrpcapi';
 import { RequestResponseData } from '../../common/apibase';
-import { Peer } from 'src/common/types';
 
 /**
  * Class for interacting with a node's InfoAPI.

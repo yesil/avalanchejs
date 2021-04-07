@@ -1,5 +1,5 @@
 export * from './base58';
-export * from './bintools';
+export BinTools from './bintools';
 export * from './constants';
 export * from './db';
 export * from './helperfunctions';

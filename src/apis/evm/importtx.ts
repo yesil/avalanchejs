@@ -10,19 +10,19 @@ import { EVMOutput } from './outputs';
 import { TransferableInput } from './inputs';
 import { EVMBaseTx } from './basetx';
 import { SelectCredentialClass } from './credentials';
-import { 
-  Signature, 
-  SigIdx, 
-  Credential 
+import {
+  Signature,
+  SigIdx,
+  Credential,
 } from '../../common/credentials';
-import { 
-  KeyChain, 
-  KeyPair 
+import {
+  KeyChain,
+  KeyPair,
 } from './keychain';
 import { DefaultNetworkID } from '../../utils/constants';
-import { 
-  Serialization, 
-  SerializedEncoding 
+import {
+  Serialization,
+  SerializedEncoding,
 } from '../../utils/serialization';
 
 /**
@@ -35,22 +35,24 @@ const serializer: Serialization = Serialization.getInstance();
  * Class representing an unsigned Import transaction.
  */
 export class ImportTx extends EVMBaseTx {
-  protected _typeName = "ImportTx";
+  protected _typeName = 'ImportTx';
+
   protected _typeID = EVMConstants.IMPORTTX;
 
-  serialize(encoding: SerializedEncoding = "hex"): object {
-    let fields: object = super.serialize(encoding);
+  serialize(encoding: SerializedEncoding = 'hex'): object {
+    const fields: object = super.serialize(encoding);
     return {
       ...fields,
-      "sourceChain": serializer.encoder(this.sourceChain, encoding, "Buffer", "cb58"),
-      "importIns": this.importIns.map((i) => i.serialize(encoding))
-    }
-  };
-  deserialize(fields: object, encoding: SerializedEncoding = "hex") {
+      sourceChain: serializer.encoder(this.sourceChain, encoding, 'Buffer', 'cb58'),
+      importIns: this.importIns.map((i) => i.serialize(encoding)),
+    };
+  }
+
+  deserialize(fields: object, encoding: SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.sourceChain = serializer.decoder(fields["sourceChain"], encoding, "cb58", "Buffer", 32);
-    this.importIns = fields["importIns"].map((i:object) => {
-      let ii: TransferableInput = new TransferableInput();
+    this.sourceChain = serializer.decoder(fields.sourceChain, encoding, 'cb58', 'Buffer', 32);
+    this.importIns = fields.importIns.map((i:object) => {
+      const ii: TransferableInput = new TransferableInput();
       ii.deserialize(i, encoding);
       return ii;
     });
@@ -59,27 +61,27 @@ export class ImportTx extends EVMBaseTx {
   }
 
   protected sourceChain: Buffer = Buffer.alloc(32);
+
   protected numIns: Buffer = Buffer.alloc(4);
+
   protected importIns: TransferableInput[] = [];
+
   protected numOuts: Buffer = Buffer.alloc(4);
+
   protected outs: EVMOutput[] = [];
 
   /**
      * Returns the id of the [[ImportTx]]
      */
-  getTxType = (): number => {
-    return this._typeID;
-  }
+  getTxType = (): number => this._typeID;
 
   /**
    * Returns a {@link https://github.com/feross/buffer|Buffer} for the source chainid.
    */
-  getSourceChain = (): Buffer => {
-    return this.sourceChain;
-  }
+  getSourceChain = (): Buffer => this.sourceChain;
 
   /**
-     * Takes a {@link https://github.com/feross/buffer|Buffer} containing an [[ImportTx]], parses it, 
+     * Takes a {@link https://github.com/feross/buffer|Buffer} containing an [[ImportTx]], parses it,
      * populates the class, and returns the length of the [[ImportTx]] in bytes.
      *
      * @param bytes A {@link https://github.com/feross/buffer|Buffer} containing a raw [[ImportTx]]
@@ -116,12 +118,12 @@ export class ImportTx extends EVMBaseTx {
    * Returns a {@link https://github.com/feross/buffer|Buffer} representation of the [[ImportTx]].
    */
   toBuffer(): Buffer {
-    if(typeof this.sourceChain === "undefined") {
-      throw new Error("ImportTx.toBuffer -- this.sourceChain is undefined");
+    if (typeof this.sourceChain === 'undefined') {
+      throw new Error('ImportTx.toBuffer -- this.sourceChain is undefined');
     }
     this.numIns.writeUInt32BE(this.importIns.length, 0);
     this.numOuts.writeUInt32BE(this.outs.length, 0);
-    let barr: Buffer[] = [super.toBuffer(), this.sourceChain, this.numIns];
+    const barr: Buffer[] = [super.toBuffer(), this.sourceChain, this.numIns];
     let bsize: number = super.toBuffer().length + this.sourceChain.length + this.numIns.length;
     this.importIns = this.importIns.sort(TransferableInput.comparator());
     this.importIns.forEach((importIn: TransferableInput) => {
@@ -152,13 +154,13 @@ export class ImportTx extends EVMBaseTx {
   }
 
   clone(): this {
-    let newImportTx: ImportTx = new ImportTx();
+    const newImportTx: ImportTx = new ImportTx();
     newImportTx.fromBuffer(this.toBuffer());
     return newImportTx as this;
   }
 
   create(...args: any[]): this {
-      return new ImportTx(...args) as this;
+    return new ImportTx(...args) as this;
   }
 
   /**
@@ -196,11 +198,11 @@ export class ImportTx extends EVMBaseTx {
    * @param outs Optional array of the [[EVMOutput]]s
    */
   constructor(
-    networkid: number = DefaultNetworkID, 
-    blockchainid: Buffer = Buffer.alloc(32, 16), 
-    sourceChainid: Buffer = Buffer.alloc(32, 16), 
+    networkid: number = DefaultNetworkID,
+    blockchainid: Buffer = Buffer.alloc(32, 16),
+    sourceChainid: Buffer = Buffer.alloc(32, 16),
     importIns: TransferableInput[] = undefined,
-    outs: EVMOutput[] = undefined
+    outs: EVMOutput[] = undefined,
   ) {
     super(networkid, blockchainid);
     this.sourceChain = sourceChainid;
@@ -218,7 +220,7 @@ export class ImportTx extends EVMBaseTx {
           throw new Error("Error - ImportTx.constructor: invalid EVMOutput in array parameter 'outs'");
         }
       });
-      if(outs.length > 1) {
+      if (outs.length > 1) {
         outs = outs.sort(EVMOutput.comparator());
       }
       this.outs = outs;

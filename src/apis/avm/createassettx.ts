@@ -19,38 +19,44 @@ const bintools = BinTools.getInstance();
 const serializer = Serialization.getInstance();
 
 export class CreateAssetTx extends BaseTx {
-  protected _typeName = "CreateAssetTx";
+  protected _typeName = 'CreateAssetTx';
+
   protected _codecID = AVMConstants.LATESTCODEC;
+
   protected _typeID = this._codecID === 0 ? AVMConstants.CREATEASSETTX : AVMConstants.CREATEASSETTX_CODECONE;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "name": serializer.encoder(this.name, encoding, "utf8", "utf8"),
-      "symbol": serializer.encoder(this.symbol, encoding, "utf8", "utf8"),
-      "denomination": serializer.encoder(this.denomination, encoding, "Buffer", "decimalString", 1),
-      "initialstate": this.initialstate.serialize(encoding)
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      name: serializer.encoder(this.name, encoding, 'utf8', 'utf8'),
+      symbol: serializer.encoder(this.symbol, encoding, 'utf8', 'utf8'),
+      denomination: serializer.encoder(this.denomination, encoding, 'Buffer', 'decimalString', 1),
+      initialstate: this.initialstate.serialize(encoding),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.name = serializer.decoder(fields["name"], encoding, "utf8", "utf8");
-    this.symbol = serializer.decoder(fields["symbol"], encoding, "utf8", "utf8");
-    this.denomination = serializer.decoder(fields["denomination"], encoding, "decimalString", "Buffer", 1);
+    this.name = serializer.decoder(fields.name, encoding, 'utf8', 'utf8');
+    this.symbol = serializer.decoder(fields.symbol, encoding, 'utf8', 'utf8');
+    this.denomination = serializer.decoder(fields.denomination, encoding, 'decimalString', 'Buffer', 1);
     this.initialstate = new InitialStates();
-    this.initialstate.deserialize(fields["initialstate"], encoding);
+    this.initialstate.deserialize(fields.initialstate, encoding);
   }
 
   protected name:string = '';
+
   protected symbol:string = '';
+
   protected denomination:Buffer = Buffer.alloc(1);
+
   protected initialstate:InitialStates = new InitialStates();
 
   setCodecID(codecID: number): void {
-    if(codecID !== 0 && codecID !== 1) {
+    if (codecID !== 0 && codecID !== 1) {
       /* istanbul ignore next */
-        throw new Error("Error - CreateAssetTx.setCodecID: invalid codecID. Valid codecIDs are 0 and 1.");
+      throw new Error('Error - CreateAssetTx.setCodecID: invalid codecID. Valid codecIDs are 0 and 1.');
     }
     this._codecID = codecID;
     this._typeID = this._codecID === 0 ? AVMConstants.CREATEASSETTX : AVMConstants.CREATEASSETTX_CODECONE;
@@ -59,9 +65,7 @@ export class CreateAssetTx extends BaseTx {
   /**
    * Returns the id of the [[CreateAssetTx]]
    */
-  getTxType = ():number => {
-    return this._typeID;
-  }
+  getTxType = ():number => this._typeID;
 
   /**
    * Returns the array of array of [[Output]]s for the initial state
@@ -86,9 +90,7 @@ export class CreateAssetTx extends BaseTx {
   /**
    * Returns the {@link https://github.com/feross/buffer|Buffer} representation of the denomination
    */
-  getDenominationBuffer = ():Buffer => {
-      return this.denomination;
-  }
+  getDenominationBuffer = ():Buffer => this.denomination;
 
   /**
    * Takes a {@link https://github.com/feross/buffer|Buffer} containing an [[CreateAssetTx]], parses it, populates the class, and returns the length of the [[CreateAssetTx]] in bytes.
@@ -145,13 +147,13 @@ export class CreateAssetTx extends BaseTx {
   }
 
   clone():this {
-    let newbase:CreateAssetTx = new CreateAssetTx();
+    const newbase:CreateAssetTx = new CreateAssetTx();
     newbase.fromBuffer(this.toBuffer());
     return newbase as this;
   }
 
   create(...args:any[]):this {
-      return new CreateAssetTx(...args) as this;
+    return new CreateAssetTx(...args) as this;
   }
 
   /**
@@ -171,7 +173,7 @@ export class CreateAssetTx extends BaseTx {
     networkid:number = DefaultNetworkID, blockchainid:Buffer = Buffer.alloc(32, 16),
     outs:Array<TransferableOutput> = undefined, ins:Array<TransferableInput> = undefined,
     memo:Buffer = undefined, name:string = undefined, symbol:string = undefined, denomination:number = undefined,
-    initialstate:InitialStates = undefined
+    initialstate:InitialStates = undefined,
   ) {
     super(networkid, blockchainid, outs, ins, memo);
     if (

@@ -2,11 +2,10 @@
  * @packageDocumentation
  * @module Common-Signature
  */
-import { NBytes } from './nbytes';
 import { Buffer } from 'buffer/';
+import { NBytes } from './nbytes';
 import BinTools from '../utils/bintools';
 import { Serializable, Serialization, SerializedEncoding } from '../utils/serialization';
-
 
 /**
  * @ignore
@@ -18,30 +17,34 @@ const serializer = Serialization.getInstance();
  * Type representing a [[Signature]] index used in [[Input]]
  */
 export class SigIdx extends NBytes {
-  protected _typeName = "SigIdx";
+  protected _typeName = 'SigIdx';
+
   protected _typeID = undefined;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "source": serializer.encoder(this.source, encoding, "Buffer", "hex")
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      source: serializer.encoder(this.source, encoding, 'Buffer', 'hex'),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.source = serializer.decoder(fields["source"], encoding, "hex", "Buffer");
+    this.source = serializer.decoder(fields.source, encoding, 'hex', 'Buffer');
   }
 
   protected source:Buffer = Buffer.alloc(20);
+
   protected bytes = Buffer.alloc(4);
+
   protected bsize = 4;
 
   /**
    * Sets the source address for the signature
    */
   setSource = (address:Buffer) => {
-      this.source = address;
+    this.source = address;
   };
 
   /**
@@ -50,7 +53,7 @@ export class SigIdx extends NBytes {
   getSource = ():Buffer => this.source;
 
   clone():this {
-    let newbase:SigIdx = new SigIdx();
+    const newbase:SigIdx = new SigIdx();
     newbase.fromBuffer(this.toBuffer());
     return newbase as this;
   }
@@ -59,12 +62,11 @@ export class SigIdx extends NBytes {
     return new SigIdx() as this;
   }
 
-
   /**
    * Type representing a [[Signature]] index used in [[Input]]
    */
   constructor() {
-      super();
+    super();
   }
 }
 
@@ -72,16 +74,18 @@ export class SigIdx extends NBytes {
  * Signature for a [[Tx]]
  */
 export class Signature extends NBytes {
-  protected _typeName = "Signature";
+  protected _typeName = 'Signature';
+
   protected _typeID = undefined;
 
-  //serialize and deserialize both are inherited
+  // serialize and deserialize both are inherited
 
   protected bytes = Buffer.alloc(65);
+
   protected bsize = 65;
 
   clone():this {
-    let newbase:Signature = new Signature();
+    const newbase:Signature = new Signature();
     newbase.fromBuffer(this.toBuffer());
     return newbase as this;
   }
@@ -94,25 +98,27 @@ export class Signature extends NBytes {
    * Signature for a [[Tx]]
    */
   constructor() {
-      super();
+    super();
   }
 }
 
-export abstract class Credential extends Serializable{
-  protected _typeName = "Credential";
+export abstract class Credential extends Serializable {
+  protected _typeName = 'Credential';
+
   protected _typeID = undefined;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "sigArray": this.sigArray.map((s) => s.serialize(encoding))
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      sigArray: this.sigArray.map((s) => s.serialize(encoding)),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.sigArray = fields["sigArray"].map((s:object) => {
-      let sig:Signature = new Signature();
+    this.sigArray = fields.sigArray.map((s:object) => {
+      const sig:Signature = new Signature();
       sig.deserialize(s, encoding);
       return sig;
     });
@@ -121,7 +127,8 @@ export abstract class Credential extends Serializable{
   protected sigArray:Array<Signature> = [];
 
   abstract getCredentialID():number;
-  setCodecID(codecID: number):void {};
+
+  setCodecID(codecID: number):void {}
 
   /**
      * Adds a signature to the credentials and returns the index off the added signature.

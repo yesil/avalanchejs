@@ -7,7 +7,6 @@ import { Buffer } from 'buffer/';
 import BinTools from '../utils/bintools';
 import { Serializable, Serialization, SerializedEncoding } from '../utils/serialization';
 
-
 /**
  * @ignore
  */
@@ -22,24 +21,27 @@ const serializer = Serialization.getInstance();
  * the correct length.
  */
 export abstract class NBytes extends Serializable {
-  protected _typeName = "NBytes";
+  protected _typeName = 'NBytes';
+
   protected _typeID = undefined;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "bsize": serializer.encoder(this.bsize, encoding, "number", "decimalString", 4),
-      "bytes": serializer.encoder(this.bytes, encoding, "Buffer", "hex", this.bsize)
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      bsize: serializer.encoder(this.bsize, encoding, 'number', 'decimalString', 4),
+      bytes: serializer.encoder(this.bytes, encoding, 'Buffer', 'hex', this.bsize),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.bsize = serializer.decoder(fields["bsize"], encoding, "decimalString", "number", 4);
-    this.bytes = serializer.decoder(fields["bytes"], encoding, "hex", "Buffer", this.bsize);
+    this.bsize = serializer.decoder(fields.bsize, encoding, 'decimalString', 'number', 4);
+    this.bytes = serializer.decoder(fields.bytes, encoding, 'hex', 'Buffer', this.bsize);
   }
 
   protected bytes:Buffer;
+
   protected bsize:number;
 
   /**
@@ -75,7 +77,7 @@ export abstract class NBytes extends Serializable {
     try {
       if (buff.length - offset < this.bsize) {
         /* istanbul ignore next */
-        throw new Error("Error - NBytes.fromBuffer: not enough space available in buffer.");
+        throw new Error('Error - NBytes.fromBuffer: not enough space available in buffer.');
       }
 
       this.bytes = bintools.copyFrom(buff, offset, offset + this.bsize);
@@ -105,5 +107,4 @@ export abstract class NBytes extends Serializable {
   abstract clone():this;
 
   abstract create(...args:any[]):this;
-  
 }

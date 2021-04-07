@@ -16,6 +16,8 @@
     "declarationMap": true,
     "noFallthroughCasesInSwitch": true,
     "strictFunctionTypes": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
     "esModuleInterop": true,
     "typeRoots": [
       "./typings/**",

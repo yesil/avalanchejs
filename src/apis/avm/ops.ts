@@ -3,6 +3,7 @@
  * @module API-AVM-Operations
  */
 import { Buffer } from 'buffer/';
+import { off } from 'process';
 import BinTools from '../../utils/bintools';
 import { AVMConstants } from './constants';
 import { NFTTransferOutput, SECPMintOutput, SECPTransferOutput } from './outputs';
@@ -10,7 +11,6 @@ import { NBytes } from '../../common/nbytes';
 import { SigIdx } from '../../common/credentials';
 import { OutputOwners } from '../../common/output';
 import { Serializable, Serialization, SerializedEncoding } from '../../utils/serialization';
-import { off } from 'process';
 
 const bintools = BinTools.getInstance();
 const serializer = Serialization.getInstance();
@@ -23,35 +23,37 @@ const serializer = Serialization.getInstance();
  * @returns An instance of an [[Operation]]-extended class.
  */
 export const SelectOperationClass = (opid:number, ...args:Array<any>):Operation => {
-    if(opid === AVMConstants.SECPMINTOPID || opid === AVMConstants.SECPMINTOPID_CODECONE) {
-      return new SECPMintOperation(...args);
-    } else if(opid === AVMConstants.NFTMINTOPID || opid === AVMConstants.NFTMINTOPID_CODECONE){
-      return new NFTMintOperation(...args);
-    } else if(opid === AVMConstants.NFTXFEROPID || opid === AVMConstants.NFTXFEROPID_CODECONE){
-      return new NFTTransferOperation(...args);
-    }
-    /* istanbul ignore next */
-    throw new Error("Error - SelectOperationClass: unknown opid " + opid);
-}
+  if (opid === AVMConstants.SECPMINTOPID || opid === AVMConstants.SECPMINTOPID_CODECONE) {
+    return new SECPMintOperation(...args);
+  } if (opid === AVMConstants.NFTMINTOPID || opid === AVMConstants.NFTMINTOPID_CODECONE) {
+    return new NFTMintOperation(...args);
+  } if (opid === AVMConstants.NFTXFEROPID || opid === AVMConstants.NFTXFEROPID_CODECONE) {
+    return new NFTTransferOperation(...args);
+  }
+  /* istanbul ignore next */
+  throw new Error(`Error - SelectOperationClass: unknown opid ${opid}`);
+};
 
 /**
  * A class representing an operation. All operation types must extend on this class.
  */
-export abstract class Operation extends Serializable{
-  protected _typeName = "Operation";
+export abstract class Operation extends Serializable {
+  protected _typeName = 'Operation';
+
   protected _typeID = undefined;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "sigIdxs": this.sigIdxs.map((s) => s.serialize(encoding))
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      sigIdxs: this.sigIdxs.map((s) => s.serialize(encoding)),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.sigIdxs = fields["sigIdxs"].map((s:object) => {
-      let sidx:SigIdx = new SigIdx();
+    this.sigIdxs = fields.sigIdxs.map((s:object) => {
+      const sidx:SigIdx = new SigIdx();
       sidx.deserialize(s, encoding);
       return sidx;
     });
@@ -59,6 +61,7 @@ export abstract class Operation extends Serializable{
   }
 
   protected sigCount:Buffer = Buffer.alloc(4);
+
   protected sigIdxs:Array<SigIdx> = []; // idxs of signers from utxo
 
   static comparator = ():(a:Operation, b:Operation) => (1|-1|0) => (a:Operation, b:Operation):(1|-1|0) => {
@@ -136,7 +139,6 @@ export abstract class Operation extends Serializable{
   toString():string {
     return bintools.bufferToB58(this.toBuffer());
   }
-
 }
 
 /**
@@ -144,42 +146,45 @@ export abstract class Operation extends Serializable{
  *
  */
 export class TransferableOperation extends Serializable {
-  protected _typeName = "TransferableOperation";
+  protected _typeName = 'TransferableOperation';
+
   protected _typeID = undefined;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "assetid": serializer.encoder(this.assetid, encoding, "Buffer", "cb58", 32),
-      "utxoIDs": this.utxoIDs.map((u) => u.serialize(encoding)),
-      "operation": this.operation.serialize(encoding)
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      assetid: serializer.encoder(this.assetid, encoding, 'Buffer', 'cb58', 32),
+      utxoIDs: this.utxoIDs.map((u) => u.serialize(encoding)),
+      operation: this.operation.serialize(encoding),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.assetid = serializer.decoder(fields["assetid"], encoding, "cb58", "Buffer", 32);
-    this.utxoIDs = fields["utxoIDs"].map((u:object) => {
-      let utxoid:UTXOID = new UTXOID();
+    this.assetid = serializer.decoder(fields.assetid, encoding, 'cb58', 'Buffer', 32);
+    this.utxoIDs = fields.utxoIDs.map((u:object) => {
+      const utxoid:UTXOID = new UTXOID();
       utxoid.deserialize(u, encoding);
       return utxoid;
     });
-    this.operation = SelectOperationClass(fields["operation"]["_typeID"]);
-    this.operation.deserialize(fields["operation"], encoding);
+    this.operation = SelectOperationClass(fields.operation._typeID);
+    this.operation.deserialize(fields.operation, encoding);
   }
 
   protected assetid:Buffer = Buffer.alloc(32);
+
   protected utxoIDs:Array<UTXOID> = [];
+
   protected operation:Operation;
 
   /**
    * Returns a function used to sort an array of [[TransferableOperation]]s
    */
-  static comparator = ():(a:TransferableOperation, b:TransferableOperation) => (1|-1|0) => {
-      return function(a:TransferableOperation, b:TransferableOperation):(1|-1|0) { 
-          return Buffer.compare(a.toBuffer(), b.toBuffer()) as (1|-1|0);
-      }
-  }
+  static comparator = ():(a:TransferableOperation, b:TransferableOperation) => (1|-1|0) => function (a:TransferableOperation, b:TransferableOperation):(1|-1|0) {
+    return Buffer.compare(a.toBuffer(), b.toBuffer()) as (1|-1|0);
+  };
+
   /**
    * Returns the assetID as a {@link https://github.com/feross/buffer|Buffer}.
    */
@@ -261,33 +266,37 @@ export class TransferableOperation extends Serializable {
  * An [[Operation]] class which specifies a SECP256k1 Mint Op.
  */
 export class SECPMintOperation extends Operation {
-  protected _typeName = "SECPMintOperation";
+  protected _typeName = 'SECPMintOperation';
+
   protected _codecID = AVMConstants.LATESTCODEC;
+
   protected _typeID = this._codecID === 0 ? AVMConstants.SECPMINTOPID : AVMConstants.SECPMINTOPID_CODECONE;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "mintOutput": this.mintOutput.serialize(encoding),
-      "transferOutputs": this.transferOutput.serialize(encoding)
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      mintOutput: this.mintOutput.serialize(encoding),
+      transferOutputs: this.transferOutput.serialize(encoding),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
     this.mintOutput = new SECPMintOutput();
-    this.mintOutput.deserialize(fields["mintOutput"], encoding);
+    this.mintOutput.deserialize(fields.mintOutput, encoding);
     this.transferOutput = new SECPTransferOutput();
-    this.transferOutput.deserialize(fields["transferOutputs"], encoding);
+    this.transferOutput.deserialize(fields.transferOutputs, encoding);
   }
 
   protected mintOutput:SECPMintOutput = undefined;
+
   protected transferOutput:SECPTransferOutput = undefined;
 
   setCodecID(codecID: number): void {
-    if(codecID !== 0 && codecID !== 1) {
+    if (codecID !== 0 && codecID !== 1) {
       /* istanbul ignore next */
-        throw new Error("Error - SECPMintOperation.setCodecID: invalid codecID. Valid codecIDs are 0 and 1.");
+      throw new Error('Error - SECPMintOperation.setCodecID: invalid codecID. Valid codecIDs are 0 and 1.');
     }
     this._codecID = codecID;
     this._typeID = this._codecID === 0 ? AVMConstants.SECPMINTOPID : AVMConstants.SECPMINTOPID_CODECONE;
@@ -303,10 +312,10 @@ export class SECPMintOperation extends Operation {
   /**
    * Returns the credential ID.
    */
-  getCredentialID (): number {
-    if(this._codecID === 0) {
+  getCredentialID(): number {
+    if (this._codecID === 0) {
       return AVMConstants.SECPCREDENTIAL;
-    } else if (this._codecID === 1) {
+    } if (this._codecID === 1) {
       return AVMConstants.SECPCREDENTIAL_CODECONE;
     }
   }
@@ -341,77 +350,80 @@ export class SECPMintOperation extends Operation {
    * Returns the buffer representing the [[SECPMintOperation]] instance.
    */
   toBuffer():Buffer {
-    let superbuff:Buffer = super.toBuffer();
-    let mintoutBuff:Buffer = this.mintOutput.toBuffer();
-    let transferOutBuff:Buffer = this.transferOutput.toBuffer();
-    let bsize:number = 
-      superbuff.length + 
-      mintoutBuff.length + 
-      transferOutBuff.length; 
+    const superbuff:Buffer = super.toBuffer();
+    const mintoutBuff:Buffer = this.mintOutput.toBuffer();
+    const transferOutBuff:Buffer = this.transferOutput.toBuffer();
+    const bsize:number = superbuff.length
+      + mintoutBuff.length
+      + transferOutBuff.length;
 
-    let barr:Array<Buffer> = [
-      superbuff, 
+    const barr:Array<Buffer> = [
+      superbuff,
       mintoutBuff,
-      transferOutBuff
+      transferOutBuff,
     ];
 
-    return Buffer.concat(barr,bsize);
+    return Buffer.concat(barr, bsize);
   }
 
   /**
    * An [[Operation]] class which mints new tokens on an assetID.
-   * 
+   *
    * @param mintOutput The [[SECPMintOutput]] that will be produced by this transaction.
    * @param transferOutput A [[SECPTransferOutput]] that will be produced from this minting operation.
    */
-  constructor(mintOutput:SECPMintOutput = undefined, transferOutput:SECPTransferOutput = undefined){
+  constructor(mintOutput:SECPMintOutput = undefined, transferOutput:SECPTransferOutput = undefined) {
     super();
-    if(typeof mintOutput !== 'undefined') {
+    if (typeof mintOutput !== 'undefined') {
       this.mintOutput = mintOutput;
-    } 
-    if(typeof transferOutput !== 'undefined') {
-        this.transferOutput = transferOutput;
+    }
+    if (typeof transferOutput !== 'undefined') {
+      this.transferOutput = transferOutput;
     }
   }
-
 }
 
 /**
  * An [[Operation]] class which specifies a NFT Mint Op.
  */
 export class NFTMintOperation extends Operation {
-  protected _typeName = "NFTMintOperation";
+  protected _typeName = 'NFTMintOperation';
+
   protected _codecID = AVMConstants.LATESTCODEC;
+
   protected _typeID = this._codecID === 0 ? AVMConstants.NFTMINTOPID : AVMConstants.NFTMINTOPID_CODECONE;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "groupID": serializer.encoder(this.groupID, encoding, "Buffer", "decimalString", 4),
-      "payload": serializer.encoder(this.payload, encoding, "Buffer", "hex"),
-      "outputOwners": this.outputOwners.map((o) => o.serialize(encoding))
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      groupID: serializer.encoder(this.groupID, encoding, 'Buffer', 'decimalString', 4),
+      payload: serializer.encoder(this.payload, encoding, 'Buffer', 'hex'),
+      outputOwners: this.outputOwners.map((o) => o.serialize(encoding)),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.groupID = serializer.decoder(fields["groupID"], encoding, "decimalString", "Buffer", 4);
-    this.payload = serializer.decoder(fields["payload"], encoding, "hex", "Buffer");
-    this.outputOwners = fields["outputOwners"].map((o:object) => {
-      let oo:OutputOwners = new OutputOwners();
+    this.groupID = serializer.decoder(fields.groupID, encoding, 'decimalString', 'Buffer', 4);
+    this.payload = serializer.decoder(fields.payload, encoding, 'hex', 'Buffer');
+    this.outputOwners = fields.outputOwners.map((o:object) => {
+      const oo:OutputOwners = new OutputOwners();
       oo.deserialize(o, encoding);
       return oo;
     });
   }
 
   protected groupID:Buffer = Buffer.alloc(4);
+
   protected payload:Buffer;
+
   protected outputOwners:Array<OutputOwners> = [];
 
   setCodecID(codecID: number): void {
-    if(codecID !== 0 && codecID !== 1) {
+    if (codecID !== 0 && codecID !== 1) {
       /* istanbul ignore next */
-        throw new Error("Error - NFTMintOperation.setCodecID: invalid codecID. Valid codecIDs are 0 and 1.");
+      throw new Error('Error - NFTMintOperation.setCodecID: invalid codecID. Valid codecIDs are 0 and 1.');
     }
     this._codecID = codecID;
     this._typeID = this._codecID === 0 ? AVMConstants.NFTMINTOPID : AVMConstants.NFTMINTOPID_CODECONE;
@@ -428,35 +440,31 @@ export class NFTMintOperation extends Operation {
    * Returns the credential ID.
    */
   getCredentialID = (): number => {
-    if(this._codecID === 0) {
+    if (this._codecID === 0) {
       return AVMConstants.NFTCREDENTIAL;
-    } else if (this._codecID === 1) {
+    } if (this._codecID === 1) {
       return AVMConstants.NFTCREDENTIAL_CODECONE;
     }
-  }
+  };
 
   /**
    * Returns the payload.
    */
-  getPayload = ():Buffer => {
-    return bintools.copyFrom(this.payload, 0);
-  }
+  getPayload = ():Buffer => bintools.copyFrom(this.payload, 0);
 
   /**
    * Returns the payload's raw {@link https://github.com/feross/buffer|Buffer} with length prepended, for use with [[PayloadBase]]'s fromBuffer
    */
   getPayloadBuffer = ():Buffer => {
-    let payloadlen:Buffer = Buffer.alloc(4);
+    const payloadlen:Buffer = Buffer.alloc(4);
     payloadlen.writeUInt32BE(this.payload.length, 0);
     return Buffer.concat([payloadlen, bintools.copyFrom(this.payload, 0)]);
-  }
+  };
 
   /**
    * Returns the outputOwners.
    */
-  getOutputOwners = ():Array<OutputOwners> => {
-    return this.outputOwners;
-  }
+  getOutputOwners = ():Array<OutputOwners> => this.outputOwners;
 
   /**
    * Popuates the instance from a {@link https://github.com/feross/buffer|Buffer} representing the [[NFTMintOperation]] and returns the updated offset.
@@ -465,15 +473,15 @@ export class NFTMintOperation extends Operation {
     offset = super.fromBuffer(bytes, offset);
     this.groupID = bintools.copyFrom(bytes, offset, offset + 4);
     offset += 4;
-    let payloadLen:number = bintools.copyFrom(bytes, offset, offset + 4).readUInt32BE(0);
+    const payloadLen:number = bintools.copyFrom(bytes, offset, offset + 4).readUInt32BE(0);
     offset += 4;
     this.payload = bintools.copyFrom(bytes, offset, offset + payloadLen);
     offset += payloadLen;
-    let numoutputs:number = bintools.copyFrom(bytes, offset, offset + 4).readUInt32BE(0);
+    const numoutputs:number = bintools.copyFrom(bytes, offset, offset + 4).readUInt32BE(0);
     offset += 4;
     this.outputOwners = [];
-    for(let i:number = 0; i < numoutputs; i++) {
-      let outputOwner:OutputOwners = new OutputOwners();
+    for (let i:number = 0; i < numoutputs; i++) {
+      const outputOwner:OutputOwners = new OutputOwners();
       offset = outputOwner.fromBuffer(bytes, offset);
       this.outputOwners.push(outputOwner);
     }
@@ -484,35 +492,34 @@ export class NFTMintOperation extends Operation {
    * Returns the buffer representing the [[NFTMintOperation]] instance.
    */
   toBuffer():Buffer {
-    let superbuff:Buffer = super.toBuffer();
-    let payloadlen:Buffer = Buffer.alloc(4);
+    const superbuff:Buffer = super.toBuffer();
+    const payloadlen:Buffer = Buffer.alloc(4);
     payloadlen.writeUInt32BE(this.payload.length, 0);
 
-    let outputownerslen:Buffer = Buffer.alloc(4);
+    const outputownerslen:Buffer = Buffer.alloc(4);
     outputownerslen.writeUInt32BE(this.outputOwners.length, 0);
 
-    let bsize:number = 
-      superbuff.length + 
-      this.groupID.length + 
-      payloadlen.length + 
-      this.payload.length +
-      outputownerslen.length; 
+    let bsize:number = superbuff.length
+      + this.groupID.length
+      + payloadlen.length
+      + this.payload.length
+      + outputownerslen.length;
 
-    let barr:Array<Buffer> = [
-      superbuff, 
+    const barr:Array<Buffer> = [
+      superbuff,
       this.groupID,
       payloadlen,
-      this.payload, 
-      outputownerslen
+      this.payload,
+      outputownerslen,
     ];
 
-    for(let i = 0; i < this.outputOwners.length; i++) {
-      let b:Buffer = this.outputOwners[i].toBuffer();
+    for (let i = 0; i < this.outputOwners.length; i++) {
+      const b:Buffer = this.outputOwners[i].toBuffer();
       barr.push(b);
       bsize += b.length;
     }
 
-    return Buffer.concat(barr,bsize);
+    return Buffer.concat(barr, bsize);
   }
 
   /**
@@ -524,15 +531,15 @@ export class NFTMintOperation extends Operation {
 
   /**
    * An [[Operation]] class which contains an NFT on an assetID.
-   * 
+   *
    * @param groupID The group to which to issue the NFT Output
    * @param payload A {@link https://github.com/feross/buffer|Buffer} of the NFT payload
    * @param outputOwners An array of outputOwners
    */
-  constructor(groupID:number = undefined, payload:Buffer = undefined, outputOwners:Array<OutputOwners> = undefined){
+  constructor(groupID:number = undefined, payload:Buffer = undefined, outputOwners:Array<OutputOwners> = undefined) {
     super();
-    if(typeof groupID !== 'undefined' && typeof payload !== 'undefined' && outputOwners.length) {
-      this.groupID.writeUInt32BE((groupID ? groupID : 0), 0);
+    if (typeof groupID !== 'undefined' && typeof payload !== 'undefined' && outputOwners.length) {
+      this.groupID.writeUInt32BE((groupID || 0), 0);
       this.payload = payload;
       this.outputOwners = outputOwners;
     }
@@ -543,29 +550,32 @@ export class NFTMintOperation extends Operation {
  * A [[Operation]] class which specifies a NFT Transfer Op.
  */
 export class NFTTransferOperation extends Operation {
-  protected _typeName = "NFTTransferOperation";
+  protected _typeName = 'NFTTransferOperation';
+
   protected _codecID = AVMConstants.LATESTCODEC;
+
   protected _typeID = this._codecID === 0 ? AVMConstants.NFTXFEROPID : AVMConstants.NFTXFEROPID_CODECONE;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "output": this.output.serialize(encoding)
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      output: this.output.serialize(encoding),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
     this.output = new NFTTransferOutput();
-    this.output.deserialize(fields["output"], encoding);
+    this.output.deserialize(fields.output, encoding);
   }
 
   protected output:NFTTransferOutput;
 
   setCodecID(codecID: number): void {
-    if(codecID !== 0 && codecID !== 1) {
+    if (codecID !== 0 && codecID !== 1) {
       /* istanbul ignore next */
-        throw new Error("Error - NFTTransferOperation.setCodecID: invalid codecID. Valid codecIDs are 0 and 1.");
+      throw new Error('Error - NFTTransferOperation.setCodecID: invalid codecID. Valid codecIDs are 0 and 1.');
     }
     this._codecID = codecID;
     this._typeID = this._codecID === 0 ? AVMConstants.NFTXFEROPID : AVMConstants.NFTXFEROPID_CODECONE;
@@ -581,10 +591,10 @@ export class NFTTransferOperation extends Operation {
   /**
    * Returns the credential ID.
    */
-  getCredentialID (): number {
-    if(this._codecID === 0) {
+  getCredentialID(): number {
+    if (this._codecID === 0) {
       return AVMConstants.NFTCREDENTIAL;
-    } else if (this._codecID === 1) {
+    } if (this._codecID === 1) {
       return AVMConstants.NFTCREDENTIAL_CODECONE;
     }
   }
@@ -639,12 +649,14 @@ export class NFTTransferOperation extends Operation {
  * Class for representing a UTXOID used in [[TransferableOp]] types
  */
 export class UTXOID extends NBytes {
-  protected _typeName = "UTXOID";
+  protected _typeName = 'UTXOID';
+
   protected _typeID = undefined;
 
-  //serialize and deserialize both are inherited
+  // serialize and deserialize both are inherited
 
   protected bytes = Buffer.alloc(36);
+
   protected bsize = 36;
 
   /**
@@ -683,11 +695,10 @@ export class UTXOID extends NBytes {
       throw new Error('Error - UTXOID.fromString: invalid address');
     }
     return this.getSize();
-    
   }
 
   clone():this {
-    let newbase:UTXOID = new UTXOID();
+    const newbase:UTXOID = new UTXOID();
     newbase.fromBuffer(this.toBuffer());
     return newbase as this;
   }

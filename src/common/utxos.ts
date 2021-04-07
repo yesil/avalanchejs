@@ -3,8 +3,8 @@
  * @module Common-UTXOs
  */
 import { Buffer } from 'buffer/';
+import BN from 'bn.js';
 import BinTools from '../utils/bintools';
-import BN from "bn.js";
 import { Output, StandardAmountOutput } from './output';
 import { UnixNow } from '../utils/helperfunctions';
 import { MergeRule } from '../utils/constants';
@@ -19,33 +19,39 @@ const serializer = Serialization.getInstance();
 /**
  * Class for representing a single StandardUTXO.
  */
-export abstract class StandardUTXO extends Serializable{
-  protected _typeName = "StandardUTXO";
+export abstract class StandardUTXO extends Serializable {
+  protected _typeName = 'StandardUTXO';
+
   protected _typeID = undefined;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "codecid": serializer.encoder(this.codecid, encoding, "Buffer", "decimalString"),
-      "txid": serializer.encoder(this.txid, encoding, "Buffer", "cb58"),
-      "outputidx": serializer.encoder(this.outputidx, encoding, "Buffer", "decimalString"),
-      "assetid": serializer.encoder(this.assetid, encoding, "Buffer", "cb58"),
-      "output": this.output.serialize(encoding)
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      codecid: serializer.encoder(this.codecid, encoding, 'Buffer', 'decimalString'),
+      txid: serializer.encoder(this.txid, encoding, 'Buffer', 'cb58'),
+      outputidx: serializer.encoder(this.outputidx, encoding, 'Buffer', 'decimalString'),
+      assetid: serializer.encoder(this.assetid, encoding, 'Buffer', 'cb58'),
+      output: this.output.serialize(encoding),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.codecid = serializer.decoder(fields["codecid"], encoding, "decimalString", "Buffer", 2);
-    this.txid = serializer.decoder(fields["txid"], encoding, "cb58", "Buffer", 32);
-    this.outputidx = serializer.decoder(fields["outputidx"], encoding, "decimalString", "Buffer", 4);
-    this.assetid = serializer.decoder(fields["assetid"], encoding, "cb58", "Buffer", 32);
+    this.codecid = serializer.decoder(fields.codecid, encoding, 'decimalString', 'Buffer', 2);
+    this.txid = serializer.decoder(fields.txid, encoding, 'cb58', 'Buffer', 32);
+    this.outputidx = serializer.decoder(fields.outputidx, encoding, 'decimalString', 'Buffer', 4);
+    this.assetid = serializer.decoder(fields.assetid, encoding, 'cb58', 'Buffer', 32);
   }
 
   protected codecid:Buffer = Buffer.alloc(2);
+
   protected txid:Buffer = Buffer.alloc(32);
+
   protected outputidx:Buffer = Buffer.alloc(4);
+
   protected assetid:Buffer = Buffer.alloc(32);
+
   protected output:Output = undefined;
 
   /**
@@ -106,8 +112,8 @@ export abstract class StandardUTXO extends Serializable{
     const outputidbuffer:Buffer = Buffer.alloc(4);
     outputidbuffer.writeUInt32BE(this.output.getOutputID(), 0);
     const barr:Array<Buffer> = [this.codecid, this.txid, this.outputidx, this.assetid, outputidbuffer, outbuff];
-    return Buffer.concat(barr, 
-      this.codecid.length + this.txid.length 
+    return Buffer.concat(barr,
+      this.codecid.length + this.txid.length
       + this.outputidx.length + this.assetid.length
       + outputidbuffer.length + outbuff.length);
   }
@@ -135,61 +141,62 @@ export abstract class StandardUTXO extends Serializable{
   constructor(codecID:number = 0, txid:Buffer = undefined,
     outputidx:Buffer | number = undefined,
     assetid:Buffer = undefined,
-    output:Output = undefined){
+    output:Output = undefined) {
     super();
     if (typeof codecID !== 'undefined') {
-      this.codecid .writeUInt8(codecID, 0);
+      this.codecid.writeUInt8(codecID, 0);
     }
-    if(typeof txid !== 'undefined') {
+    if (typeof txid !== 'undefined') {
       this.txid = txid;
     }
     if (typeof outputidx === 'number') {
       this.outputidx.writeUInt32BE(outputidx, 0);
     } else if (outputidx instanceof Buffer) {
       this.outputidx = outputidx;
-    } 
+    }
 
-    if(typeof assetid !== 'undefined') {
+    if (typeof assetid !== 'undefined') {
       this.assetid = assetid;
     }
-    if(typeof output !== 'undefined') {
+    if (typeof output !== 'undefined') {
       this.output = output;
     }
-      
   }
 }
 /**
  * Class representing a set of [[StandardUTXO]]s.
  */
-export abstract class StandardUTXOSet<UTXOClass extends StandardUTXO> extends Serializable{
-  protected _typeName = "StandardUTXOSet";
+export abstract class StandardUTXOSet<UTXOClass extends StandardUTXO> extends Serializable {
+  protected _typeName = 'StandardUTXOSet';
+
   protected _typeID = undefined;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
-    let utxos = {};
-    for(let utxoid in this.utxos) {
-      let utxoidCleaned:string = serializer.encoder(utxoid, encoding, "base58", "base58");
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
+    const utxos = {};
+    for (const utxoid in this.utxos) {
+      const utxoidCleaned:string = serializer.encoder(utxoid, encoding, 'base58', 'base58');
       utxos[utxoidCleaned] = this.utxos[utxoid].serialize(encoding);
     }
-    let addressUTXOs = {};
-    for(let address in this.addressUTXOs) {
-      let addressCleaned:string = serializer.encoder(address, encoding, "hex", "cb58");
-      let utxobalance = {};
-      for(let utxoid in this.addressUTXOs[address]){
-        let utxoidCleaned:string = serializer.encoder(utxoid, encoding, "base58", "base58");
-        utxobalance[utxoidCleaned] = serializer.encoder(this.addressUTXOs[address][utxoid], encoding, "BN", "decimalString");
+    const addressUTXOs = {};
+    for (const address in this.addressUTXOs) {
+      const addressCleaned:string = serializer.encoder(address, encoding, 'hex', 'cb58');
+      const utxobalance = {};
+      for (const utxoid in this.addressUTXOs[address]) {
+        const utxoidCleaned:string = serializer.encoder(utxoid, encoding, 'base58', 'base58');
+        utxobalance[utxoidCleaned] = serializer.encoder(this.addressUTXOs[address][utxoid], encoding, 'BN', 'decimalString');
       }
       addressUTXOs[addressCleaned] = utxobalance;
     }
     return {
       ...fields,
       utxos,
-      addressUTXOs
-    }
-  };
+      addressUTXOs,
+    };
+  }
 
   protected utxos:{[utxoid: string]: UTXOClass } = {};
+
   protected addressUTXOs:{[address: string]: {[utxoid: string]: BN}} = {}; // maps address to utxoids:locktime
 
   abstract parseUTXO(utxo:UTXOClass | string):UTXOClass;
@@ -200,15 +207,15 @@ export abstract class StandardUTXOSet<UTXOClass extends StandardUTXO> extends Se
    * @param utxo Either a [[StandardUTXO]] a cb58 serialized string representing a StandardUTXO
    */
   includes = (utxo:UTXOClass | string):boolean => {
-    let utxoX:UTXOClass = undefined;
-    let utxoid:string = undefined;
+    let utxoX:UTXOClass;
+    let utxoid:string;
     try {
       utxoX = this.parseUTXO(utxo);
       utxoid = utxoX.getUTXOID();
-    } catch(e) {
-      if(e instanceof Error){
+    } catch (e) {
+      if (e instanceof Error) {
         console.log(e.message);
-      } else{ 
+      } else {
         console.log(e);
       }
       return false;
@@ -225,16 +232,16 @@ export abstract class StandardUTXOSet<UTXOClass extends StandardUTXO> extends Se
      * @returns A [[StandardUTXO]] if one was added and undefined if nothing was added.
      */
   add(utxo:UTXOClass | string, overwrite:boolean = false):UTXOClass {
-    let utxovar:UTXOClass = undefined;
+    let utxovar:UTXOClass;
     try {
       utxovar = this.parseUTXO(utxo);
-    } catch(e) {
-      if(e instanceof Error){
+    } catch (e) {
+      if (e instanceof Error) {
         console.log(e.message);
-      } else{ 
+      } else {
         console.log(e);
       }
-      return undefined; 
+      return undefined;
     }
 
     const utxoid:string = utxovar.getUTXOID();
@@ -252,7 +259,7 @@ export abstract class StandardUTXOSet<UTXOClass extends StandardUTXO> extends Se
       return utxovar;
     }
     return undefined;
-  };
+  }
 
   /**
      * Adds an array of [[StandardUTXO]]s to the [[StandardUTXOSet]].
@@ -265,13 +272,13 @@ export abstract class StandardUTXOSet<UTXOClass extends StandardUTXO> extends Se
   addArray(utxos:Array<string | UTXOClass>, overwrite:boolean = false):Array<StandardUTXO> {
     const added:Array<UTXOClass> = [];
     for (let i = 0; i < utxos.length; i++) {
-      let result:UTXOClass = this.add(utxos[i], overwrite);
+      const result:UTXOClass = this.add(utxos[i], overwrite);
       if (typeof result !== 'undefined') {
-          added.push(result);
+        added.push(result);
       }
     }
     return added;
-  };
+  }
 
   /**
      * Removes a [[StandardUTXO]] from the [[StandardUTXOSet]] if it exists.
@@ -281,16 +288,16 @@ export abstract class StandardUTXOSet<UTXOClass extends StandardUTXO> extends Se
      * @returns A [[StandardUTXO]] if it was removed and undefined if nothing was removed.
      */
   remove = (utxo:UTXOClass | string):UTXOClass => {
-    let utxovar:UTXOClass = undefined;
+    let utxovar:UTXOClass;
     try {
       utxovar = this.parseUTXO(utxo);
-    } catch(e) {
-      if(e instanceof Error){
+    } catch (e) {
+      if (e instanceof Error) {
         console.log(e.message);
-      } else{ 
+      } else {
         console.log(e);
       }
-      return undefined; 
+      return undefined;
     }
 
     const utxoid:string = utxovar.getUTXOID();
@@ -474,10 +481,10 @@ export abstract class StandardUTXOSet<UTXOClass extends StandardUTXO> extends Se
   abstract create(...args:any[]):this;
 
   filter(args:any[], lambda:(utxo:UTXOClass, ...largs:any[]) => boolean):this {
-    let newset:this = this.clone();
-    let utxos:Array<UTXOClass> = this.getAllUTXOs();
-    for(let i = 0; i < utxos.length; i++){
-      if(lambda(utxos[i], ...args) === false) {
+    const newset:this = this.clone();
+    const utxos:Array<UTXOClass> = this.getAllUTXOs();
+    for (let i = 0; i < utxos.length; i++) {
+      if (lambda(utxos[i], ...args) === false) {
         newset.remove(utxos[i]);
       }
     }
@@ -594,7 +601,7 @@ export abstract class StandardUTXOSet<UTXOClass extends StandardUTXO> extends Se
         uSet = this.union(utxoset);
         return uSet.difference(this) as this;
       default:
-        throw new Error("Error - StandardUTXOSet.mergeByRule: bad MergeRule");
+        throw new Error('Error - StandardUTXOSet.mergeByRule: bad MergeRule');
     }
   };
 }

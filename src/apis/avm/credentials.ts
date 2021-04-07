@@ -20,20 +20,22 @@ export const SelectCredentialClass = (credid:number, ...args:Array<any>):Credent
     return new NFTCredential(...args);
   }
   /* istanbul ignore next */
-  throw new Error("Error - SelectCredentialClass: unknown credid");
+  throw new Error('Error - SelectCredentialClass: unknown credid');
 };
 
 export class SECPCredential extends Credential {
-  protected _typeName = "SECPCredential";
+  protected _typeName = 'SECPCredential';
+
   protected _codecID = AVMConstants.LATESTCODEC;
+
   protected _typeID = this._codecID === 0 ? AVMConstants.SECPCREDENTIAL : AVMConstants.SECPCREDENTIAL_CODECONE;
 
-  //serialize and deserialize both are inherited
+  // serialize and deserialize both are inherited
 
   setCodecID(codecID: number): void {
-    if(codecID !== 0 && codecID !== 1) {
+    if (codecID !== 0 && codecID !== 1) {
       /* istanbul ignore next */
-        throw new Error("Error - SECPCredential.setCodecID: invalid codecID. Valid codecIDs are 0 and 1.");
+      throw new Error('Error - SECPCredential.setCodecID: invalid codecID. Valid codecIDs are 0 and 1.');
     }
     this._codecID = codecID;
     this._typeID = this._codecID === 0 ? AVMConstants.SECPCREDENTIAL : AVMConstants.SECPCREDENTIAL_CODECONE;
@@ -44,7 +46,7 @@ export class SECPCredential extends Credential {
   }
 
   clone():this {
-    let newbase:SECPCredential = new SECPCredential();
+    const newbase:SECPCredential = new SECPCredential();
     newbase.fromBuffer(this.toBuffer());
     return newbase as this;
   }
@@ -54,23 +56,24 @@ export class SECPCredential extends Credential {
   }
 
   select(id:number, ...args:any[]):Credential {
-    let newbasetx:Credential = SelectCredentialClass(id, ...args);
+    const newbasetx:Credential = SelectCredentialClass(id, ...args);
     return newbasetx;
   }
-
 }
 
 export class NFTCredential extends Credential {
-  protected _typeName = "NFTCredential";
+  protected _typeName = 'NFTCredential';
+
   protected _codecID = AVMConstants.LATESTCODEC;
+
   protected _typeID = this._codecID === 0 ? AVMConstants.NFTCREDENTIAL : AVMConstants.NFTCREDENTIAL_CODECONE;
 
-  //serialize and deserialize both are inherited
+  // serialize and deserialize both are inherited
 
   setCodecID(codecID: number): void {
-    if(codecID !== 0 && codecID !== 1) {
+    if (codecID !== 0 && codecID !== 1) {
       /* istanbul ignore next */
-        throw new Error("Error - NFTCredential.setCodecID: invalid codecID. Valid codecIDs are 0 and 1.");
+      throw new Error('Error - NFTCredential.setCodecID: invalid codecID. Valid codecIDs are 0 and 1.');
     }
     this._codecID = codecID;
     this._typeID = this._codecID === 0 ? AVMConstants.NFTCREDENTIAL : AVMConstants.NFTCREDENTIAL_CODECONE;
@@ -81,7 +84,7 @@ export class NFTCredential extends Credential {
   }
 
   clone():this {
-    let newbase:NFTCredential = new NFTCredential();
+    const newbase:NFTCredential = new NFTCredential();
     newbase.fromBuffer(this.toBuffer());
     return newbase as this;
   }
@@ -91,8 +94,7 @@ export class NFTCredential extends Credential {
   }
 
   select(id:number, ...args:any[]):Credential {
-    let newbasetx:Credential = SelectCredentialClass(id, ...args);
+    const newbasetx:Credential = SelectCredentialClass(id, ...args);
     return newbasetx;
   }
-
 }

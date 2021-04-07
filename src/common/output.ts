@@ -20,20 +20,22 @@ const serializer = Serialization.getInstance();
  * Class for representing an address used in [[Output]] types
  */
 export class Address extends NBytes {
-  protected _typeName = "Address";
+  protected _typeName = 'Address';
+
   protected _typeID = undefined;
 
-  //serialize and deserialize both are inherited
+  // serialize and deserialize both are inherited
 
   protected bytes = Buffer.alloc(20);
+
   protected bsize = 20;
 
   /**
    * Returns a function used to sort an array of [[Address]]es
    */
   static comparator = ()
-      :(a:Address, b:Address) => (1|-1|0) => (a:Address, b:Address)
-      :(1|-1|0) => Buffer.compare(a.toBuffer(), b.toBuffer()) as (1|-1|0);
+    :(a:Address, b:Address) => (1|-1|0) => (a:Address, b:Address)
+    :(1|-1|0) => Buffer.compare(a.toBuffer(), b.toBuffer()) as (1|-1|0);
 
   /**
      * Returns a base-58 representation of the [[Address]].
@@ -68,7 +70,7 @@ export class Address extends NBytes {
   }
 
   clone():this {
-    let newbase:Address = new Address();
+    const newbase:Address = new Address();
     newbase.fromBuffer(this.toBuffer());
     return newbase as this;
   }
@@ -85,28 +87,30 @@ export class Address extends NBytes {
   }
 }
 
-  /**
+/**
    * Defines the most basic values for output ownership. Mostly inherited from, but can be used in population of NFT Owner data.
    */
 export class OutputOwners extends Serializable {
-  protected _typeName = "OutputOwners";
+  protected _typeName = 'OutputOwners';
+
   protected _typeID = undefined;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "locktime": serializer.encoder(this.locktime, encoding, "Buffer", "decimalString", 8),
-      "threshold": serializer.encoder(this.threshold, encoding, "Buffer", "decimalString", 4),
-      "addresses": this.addresses.map((a) => a.serialize(encoding))
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      locktime: serializer.encoder(this.locktime, encoding, 'Buffer', 'decimalString', 8),
+      threshold: serializer.encoder(this.threshold, encoding, 'Buffer', 'decimalString', 4),
+      addresses: this.addresses.map((a) => a.serialize(encoding)),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.locktime = serializer.decoder(fields["locktime"], encoding, "decimalString", "Buffer", 8);
-    this.threshold = serializer.decoder(fields["threshold"], encoding, "decimalString", "Buffer", 4);
-    this.addresses = fields["addresses"].map((a:object) => {
-      let addr:Address = new Address();
+    this.locktime = serializer.decoder(fields.locktime, encoding, 'decimalString', 'Buffer', 8);
+    this.threshold = serializer.decoder(fields.threshold, encoding, 'decimalString', 'Buffer', 4);
+    this.addresses = fields.addresses.map((a:object) => {
+      const addr:Address = new Address();
       addr.deserialize(a, encoding);
       return addr;
     });
@@ -115,8 +119,11 @@ export class OutputOwners extends Serializable {
   }
 
   protected locktime:Buffer = Buffer.alloc(8);
+
   protected threshold:Buffer = Buffer.alloc(4);
+
   protected numaddrs:Buffer = Buffer.alloc(4);
+
   protected addresses:Array<Address> = [];
 
   /**
@@ -285,7 +292,7 @@ export class OutputOwners extends Serializable {
    */
   constructor(addresses:Array<Buffer> = undefined, locktime:BN = undefined, threshold:number = undefined) {
     super();
-    if(typeof addresses !== "undefined" && addresses.length) {
+    if (typeof addresses !== 'undefined' && addresses.length) {
       const addrs:Array<Address> = [];
       for (let i = 0; i < addresses.length; i++) {
         addrs[i] = new Address();
@@ -295,20 +302,21 @@ export class OutputOwners extends Serializable {
       this.addresses.sort(Address.comparator());
       this.numaddrs.writeUInt32BE(this.addresses.length, 0);
     }
-    if(typeof threshold !== undefined) {
+    if (typeof threshold !== undefined) {
       this.threshold.writeUInt32BE((threshold || 1), 0);
     }
-    if (typeof locktime !== "undefined") {
+    if (typeof locktime !== 'undefined') {
       this.locktime = bintools.fromBNToBuffer(locktime, 8);
     }
   }
 }
 
 export abstract class Output extends OutputOwners {
-  protected _typeName = "Output";
+  protected _typeName = 'Output';
+
   protected _typeID = undefined;
-  
-  //serialize and deserialize both are inherited
+
+  // serialize and deserialize both are inherited
 
   /**
    * Returns the outputID for the output which tells parsers what type it is
@@ -322,25 +330,26 @@ export abstract class Output extends OutputOwners {
   abstract select(id:number, ...args:any[]):Output;
 
   /**
-   * 
+   *
    * @param assetID An assetID which is wrapped around the Buffer of the Output
-   * 
+   *
    * Must be implemented to use the appropriate TransferableOutput for the VM.
    */
   abstract makeTransferable(assetID:Buffer):StandardTransferableOutput;
 }
 
 export abstract class StandardParseableOutput extends Serializable {
-  protected _typeName = "StandardParseableOutput";
+  protected _typeName = 'StandardParseableOutput';
+
   protected _typeID = undefined;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "output": this.output.serialize(encoding)
-    }
-  };
+      output: this.output.serialize(encoding),
+    };
+  }
 
   protected output:Output;
 
@@ -356,7 +365,7 @@ export abstract class StandardParseableOutput extends Serializable {
   getOutput = ():Output => this.output;
 
   // must be implemented to select output types for the VM in question
-  abstract fromBuffer(bytes:Buffer, offset?:number):number; 
+  abstract fromBuffer(bytes:Buffer, offset?:number):number;
 
   toBuffer():Buffer {
     const outbuff:Buffer = this.output.toBuffer();
@@ -365,10 +374,10 @@ export abstract class StandardParseableOutput extends Serializable {
     const barr:Array<Buffer> = [outid, outbuff];
     return Buffer.concat(barr, outid.length + outbuff.length);
   }
-  
+
   /**
    * Class representing an [[ParseableOutput]] for a transaction.
-   * 
+   *
    * @param output A number representing the InputID of the [[ParseableOutput]]
    */
   constructor(output:Output = undefined) {
@@ -380,19 +389,21 @@ export abstract class StandardParseableOutput extends Serializable {
 }
 
 export abstract class StandardTransferableOutput extends StandardParseableOutput {
-  protected _typeName = "StandardTransferableOutput";
+  protected _typeName = 'StandardTransferableOutput';
+
   protected _typeID = undefined;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "assetID": serializer.encoder(this.assetID, encoding, "Buffer", "cb58")
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      assetID: serializer.encoder(this.assetID, encoding, 'Buffer', 'cb58'),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.assetID = serializer.decoder(fields["assetID"], encoding, "cb58", "Buffer", 32);
+    this.assetID = serializer.decoder(fields.assetID, encoding, 'cb58', 'Buffer', 32);
   }
 
   protected assetID:Buffer = undefined;
@@ -400,7 +411,7 @@ export abstract class StandardTransferableOutput extends StandardParseableOutput
   getAssetID = ():Buffer => this.assetID;
 
   // must be implemented to select output types for the VM in question
-  abstract fromBuffer(bytes:Buffer, offset?:number):number; 
+  abstract fromBuffer(bytes:Buffer, offset?:number):number;
 
   toBuffer():Buffer {
     const parseableBuff:Buffer = super.toBuffer();
@@ -426,23 +437,26 @@ export abstract class StandardTransferableOutput extends StandardParseableOutput
  * An [[Output]] class which specifies a token amount .
  */
 export abstract class StandardAmountOutput extends Output {
-  protected _typeName = "StandardAmountOutput";
+  protected _typeName = 'StandardAmountOutput';
+
   protected _typeID = undefined;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "amount": serializer.encoder(this.amount, encoding, "Buffer", "decimalString", 8)
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      amount: serializer.encoder(this.amount, encoding, 'Buffer', 'decimalString', 8),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.amount = serializer.decoder(fields["amount"], encoding, "decimalString", "Buffer", 8);
+    this.amount = serializer.decoder(fields.amount, encoding, 'decimalString', 'Buffer', 8);
     this.amountValue = bintools.fromBufferToBN(this.amount);
   }
 
   protected amount:Buffer = Buffer.alloc(8);
+
   protected amountValue:BN = new BN(0);
 
   /**
@@ -481,7 +495,7 @@ export abstract class StandardAmountOutput extends Output {
    */
   constructor(amount:BN = undefined, addresses:Array<Buffer> = undefined, locktime:BN = undefined, threshold:number = undefined) {
     super(addresses, locktime, threshold);
-    if (typeof amount !== "undefined") {
+    if (typeof amount !== 'undefined') {
       this.amountValue = amount.clone();
       this.amount = bintools.fromBNToBuffer(amount, 8);
     }
@@ -492,19 +506,21 @@ export abstract class StandardAmountOutput extends Output {
  * An [[Output]] class which specifies an NFT.
  */
 export abstract class BaseNFTOutput extends Output {
-  protected _typeName = "BaseNFTOutput";
+  protected _typeName = 'BaseNFTOutput';
+
   protected _typeID = undefined;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "groupID": serializer.encoder(this.groupID, encoding, "Buffer", "decimalString", 4)
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      groupID: serializer.encoder(this.groupID, encoding, 'Buffer', 'decimalString', 4),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.groupID = serializer.decoder(fields["groupID"], encoding, "decimalString", "Buffer", 4);
+    this.groupID = serializer.decoder(fields.groupID, encoding, 'decimalString', 'Buffer', 4);
   }
 
   protected groupID:Buffer = Buffer.alloc(4);
@@ -512,7 +528,5 @@ export abstract class BaseNFTOutput extends Output {
   /**
    * Returns the groupID as a number.
    */
-  getGroupID = ():number => {
-      return this.groupID.readUInt32BE(0);
-  }
+  getGroupID = ():number => this.groupID.readUInt32BE(0);
 }

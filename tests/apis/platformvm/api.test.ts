@@ -68,7 +68,7 @@ describe('PlatformVMAPI', () => {
   });
 
   test('refreshBlockchainID', async () => {
-    let n3bcID:string = Defaults.network[3].P["blockchainID"];
+    let n3bcID:string = Defaults.network.get(3).P["blockchainID"];
     let testAPI:PlatformVMAPI = new PlatformVMAPI(avalanche, '/ext/bc/P');
     let bc1:string = testAPI.getBlockchainID();
     expect(bc1).toBe(PlatformChainID);

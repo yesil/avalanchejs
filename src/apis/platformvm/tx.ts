@@ -3,13 +3,13 @@
  * @module API-PlatformVM-Transactions
  */
 import { Buffer } from 'buffer/';
+import createHash from 'create-hash';
 import BinTools from '../../utils/bintools';
 import { PlatformVMConstants } from './constants';
 import { SelectCredentialClass } from './credentials';
 import { KeyChain, KeyPair } from './keychain';
 import { StandardTx, StandardUnsignedTx } from '../../common/tx';
 import { Credential } from '../../common/credentials';
-import createHash from 'create-hash';
 import { BaseTx } from './basetx';
 import { ImportTx } from './importtx';
 import { ExportTx } from './exporttx';
@@ -33,36 +33,37 @@ const serializer = Serialization.getInstance();
 export const SelectTxClass = (txtype:number, ...args:Array<any>):BaseTx => {
   if (txtype === PlatformVMConstants.BASETX) {
     return new BaseTx(...args);
-  } else if (txtype === PlatformVMConstants.IMPORTTX) {
+  } if (txtype === PlatformVMConstants.IMPORTTX) {
     return new ImportTx(...args);
-  } else if (txtype === PlatformVMConstants.EXPORTTX) {
+  } if (txtype === PlatformVMConstants.EXPORTTX) {
     return new ExportTx(...args);
-  } else if (txtype === PlatformVMConstants.ADDDELEGATORTX) {
+  } if (txtype === PlatformVMConstants.ADDDELEGATORTX) {
     return new AddDelegatorTx(...args);
-  } else if (txtype === PlatformVMConstants.ADDVALIDATORTX) {
+  } if (txtype === PlatformVMConstants.ADDVALIDATORTX) {
     return new AddValidatorTx(...args);
-  } else if (txtype === PlatformVMConstants.CREATESUBNETTX) {
+  } if (txtype === PlatformVMConstants.CREATESUBNETTX) {
     return new CreateSubnetTx(...args);
-  } 
+  }
   /* istanbul ignore next */
-  throw new Error("Error - SelectTxClass: unknown txtype");
+  throw new Error('Error - SelectTxClass: unknown txtype');
 };
 
 export class UnsignedTx extends StandardUnsignedTx<KeyPair, KeyChain, BaseTx> {
-  protected _typeName = "UnsignedTx";
+  protected _typeName = 'UnsignedTx';
+
   protected _typeID = undefined;
 
-  //serialize is inherited
+  // serialize is inherited
 
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.transaction = SelectTxClass(fields["transaction"]["_typeID"]);
-    this.transaction.deserialize(fields["transaction"], encoding);
+    this.transaction = SelectTxClass(fields.transaction._typeID);
+    this.transaction.deserialize(fields.transaction, encoding);
   }
 
-  getTransaction():BaseTx{
+  getTransaction():BaseTx {
     return this.transaction as BaseTx;
-  } 
+  }
 
   fromBuffer(bytes:Buffer, offset:number = 0):number {
     this.codecid = bintools.copyFrom(bytes, offset, offset + 2).readUInt16BE(0);
@@ -89,19 +90,20 @@ export class UnsignedTx extends StandardUnsignedTx<KeyPair, KeyChain, BaseTx> {
 }
 
 export class Tx extends StandardTx<KeyPair, KeyChain, UnsignedTx> {
-  protected _typeName = "Tx";
+  protected _typeName = 'Tx';
+
   protected _typeID = undefined;
 
-  //serialize is inherited
+  // serialize is inherited
 
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
     this.unsignedTx = new UnsignedTx();
-    this.unsignedTx.deserialize(fields["unsignedTx"], encoding);
+    this.unsignedTx.deserialize(fields.unsignedTx, encoding);
     this.credentials = [];
-    for(let i = 0; i < fields["credentials"].length; i++){
-      const cred:Credential = SelectCredentialClass(fields["credentials"][i]["_typeID"]);
-      cred.deserialize(fields["credentials"][i], encoding);
+    for (let i = 0; i < fields.credentials.length; i++) {
+      const cred:Credential = SelectCredentialClass(fields.credentials[i]._typeID);
+      cred.deserialize(fields.credentials[i], encoding);
       this.credentials.push(cred);
     }
   }
@@ -129,5 +131,4 @@ export class Tx extends StandardTx<KeyPair, KeyChain, UnsignedTx> {
     }
     return offset;
   }
-
 }

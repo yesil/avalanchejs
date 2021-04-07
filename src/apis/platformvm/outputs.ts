@@ -3,11 +3,13 @@
  * @module API-PlatformVM-Outputs
  */
 import { Buffer } from 'buffer/';
+import BN from 'bn.js';
 import BinTools from '../../utils/bintools';
 import { PlatformVMConstants } from './constants';
-import { Output, StandardAmountOutput, StandardTransferableOutput, StandardParseableOutput, Address } from '../../common/output';
+import {
+  Output, StandardAmountOutput, StandardTransferableOutput, StandardParseableOutput, Address,
+} from '../../common/output';
 import { Serialization, SerializedEncoding } from '../../utils/serialization';
-import BN from 'bn.js';
 
 const bintools = BinTools.getInstance();
 const serializer = Serialization.getInstance();
@@ -20,26 +22,27 @@ const serializer = Serialization.getInstance();
  * @returns An instance of an [[Output]]-extended class.
  */
 export const SelectOutputClass = (outputid:number, ...args:Array<any>):Output => {
-    if(outputid == PlatformVMConstants.SECPXFEROUTPUTID){
-      return new SECPTransferOutput( ...args);
-    } else if(outputid == PlatformVMConstants.SECPOWNEROUTPUTID) {
-      return new SECPOwnerOutput(...args);
-    } else if(outputid == PlatformVMConstants.STAKEABLELOCKOUTID) {
-      return new StakeableLockOut(...args);
-    }
-    throw new Error("Error - SelectOutputClass: unknown outputid " + outputid);
-}
+  if (outputid == PlatformVMConstants.SECPXFEROUTPUTID) {
+    return new SECPTransferOutput(...args);
+  } if (outputid == PlatformVMConstants.SECPOWNEROUTPUTID) {
+    return new SECPOwnerOutput(...args);
+  } if (outputid == PlatformVMConstants.STAKEABLELOCKOUTID) {
+    return new StakeableLockOut(...args);
+  }
+  throw new Error(`Error - SelectOutputClass: unknown outputid ${outputid}`);
+};
 
-export class TransferableOutput extends StandardTransferableOutput{
-  protected _typeName = "TransferableOutput";
+export class TransferableOutput extends StandardTransferableOutput {
+  protected _typeName = 'TransferableOutput';
+
   protected _typeID = undefined;
 
-  //serialize is inherited
+  // serialize is inherited
 
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.output = SelectOutputClass(fields["output"]["_typeID"]);
-    this.output.deserialize(fields["output"], encoding);
+    this.output = SelectOutputClass(fields.output._typeID);
+    this.output.deserialize(fields.output, encoding);
   }
 
   fromBuffer(bytes:Buffer, offset:number = 0):number {
@@ -50,19 +53,19 @@ export class TransferableOutput extends StandardTransferableOutput{
     this.output = SelectOutputClass(outputid);
     return this.output.fromBuffer(bytes, offset);
   }
-
 }
 
-export class ParseableOutput extends StandardParseableOutput{
-  protected _typeName = "ParseableOutput";
+export class ParseableOutput extends StandardParseableOutput {
+  protected _typeName = 'ParseableOutput';
+
   protected _typeID = undefined;
 
-  //serialize is inherited
+  // serialize is inherited
 
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.output = SelectOutputClass(fields["output"]["_typeID"]);
-    this.output.deserialize(fields["output"], encoding);
+    this.output = SelectOutputClass(fields.output._typeID);
+    this.output.deserialize(fields.output, encoding);
   }
 
   fromBuffer(bytes:Buffer, offset:number = 0):number {
@@ -74,10 +77,11 @@ export class ParseableOutput extends StandardParseableOutput{
 }
 
 export abstract class AmountOutput extends StandardAmountOutput {
-  protected _typeName = "AmountOutput";
+  protected _typeName = 'AmountOutput';
+
   protected _typeID = undefined;
 
-  //serialize and deserialize both are inherited
+  // serialize and deserialize both are inherited
 
   /**
    * @param assetID An assetID which is wrapped around the Buffer of the Output
@@ -95,10 +99,11 @@ export abstract class AmountOutput extends StandardAmountOutput {
  * An [[Output]] class which specifies an Output that carries an ammount for an assetID and uses secp256k1 signature scheme.
  */
 export class SECPTransferOutput extends AmountOutput {
-  protected _typeName = "SECPTransferOutput";
+  protected _typeName = 'SECPTransferOutput';
+
   protected _typeID = PlatformVMConstants.SECPXFEROUTPUTID;
 
-  //serialize and deserialize both are inherited
+  // serialize and deserialize both are inherited
 
   /**
    * Returns the outputID for this output
@@ -107,12 +112,12 @@ export class SECPTransferOutput extends AmountOutput {
     return this._typeID;
   }
 
-  create(...args:any[]):this{
+  create(...args:any[]):this {
     return new SECPTransferOutput(...args) as this;
   }
 
   clone():this {
-    const newout:SECPTransferOutput = this.create()
+    const newout:SECPTransferOutput = this.create();
     newout.fromBuffer(this.toBuffer());
     return newout as this;
   }
@@ -122,44 +127,47 @@ export class SECPTransferOutput extends AmountOutput {
  * An [[Output]] class which specifies an input that has a locktime which can also enable staking of the value held, preventing transfers but not validation.
  */
 export class StakeableLockOut extends AmountOutput {
-  protected _typeName = "StakeableLockOut";
+  protected _typeName = 'StakeableLockOut';
+
   protected _typeID = PlatformVMConstants.STAKEABLELOCKOUTID;
 
-  //serialize and deserialize both are inherited
+  // serialize and deserialize both are inherited
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
-    let outobj:object = {
-      ...fields, //included anywayyyy... not ideal
-      "stakeableLocktime": serializer.encoder(this.stakeableLocktime, encoding, "Buffer", "decimalString", 8),
-      "transferableOutput": this.transferableOutput.serialize(encoding)
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
+    const outobj:object = {
+      ...fields, // included anywayyyy... not ideal
+      stakeableLocktime: serializer.encoder(this.stakeableLocktime, encoding, 'Buffer', 'decimalString', 8),
+      transferableOutput: this.transferableOutput.serialize(encoding),
     };
-    delete outobj["addresses"];
-    delete outobj["locktime"];
-    delete outobj["threshold"];
-    delete outobj["amount"];
+    delete outobj.addresses;
+    delete outobj.locktime;
+    delete outobj.threshold;
+    delete outobj.amount;
     return outobj;
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
-    fields["addresses"] = [];
-    fields["locktime"] = "0";
-    fields["threshold"] =  "1";
-    fields["amount"] = "99";
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
+    fields.addresses = [];
+    fields.locktime = '0';
+    fields.threshold = '1';
+    fields.amount = '99';
     super.deserialize(fields, encoding);
-    this.stakeableLocktime = serializer.decoder(fields["stakeableLocktime"], encoding, "decimalString", "Buffer", 8);
+    this.stakeableLocktime = serializer.decoder(fields.stakeableLocktime, encoding, 'decimalString', 'Buffer', 8);
     this.transferableOutput = new ParseableOutput();
-    this.transferableOutput.deserialize(fields["transferableOutput"], encoding);
+    this.transferableOutput.deserialize(fields.transferableOutput, encoding);
     this.synchronize();
   }
 
   protected stakeableLocktime:Buffer;
+
   protected transferableOutput:ParseableOutput;
 
-  //call this every time you load in data
-  private synchronize(){
-    let output:AmountOutput = this.transferableOutput.getOutput() as AmountOutput;
+  // call this every time you load in data
+  private synchronize() {
+    const output:AmountOutput = this.transferableOutput.getOutput() as AmountOutput;
     this.addresses = output.getAddresses().map((a) => {
-      let addr:Address = new Address();
+      const addr:Address = new Address();
       addr.fromBuffer(a);
       return addr;
     });
@@ -207,7 +215,7 @@ export class StakeableLockOut extends AmountOutput {
    * Returns the buffer representing the [[StakeableLockOut]] instance.
    */
   toBuffer():Buffer {
-    let xferoutBuff:Buffer = this.transferableOutput.toBuffer();
+    const xferoutBuff:Buffer = this.transferableOutput.toBuffer();
     const bsize:number = this.stakeableLocktime.length + xferoutBuff.length;
     const barr:Array<Buffer> = [this.stakeableLocktime, xferoutBuff];
     return Buffer.concat(barr, bsize);
@@ -220,12 +228,12 @@ export class StakeableLockOut extends AmountOutput {
     return this._typeID;
   }
 
-  create(...args:any[]):this{
+  create(...args:any[]):this {
     return new StakeableLockOut(...args) as this;
   }
 
   clone():this {
-    const newout:StakeableLockOut = this.create()
+    const newout:StakeableLockOut = this.create();
     newout.fromBuffer(this.toBuffer());
     return newout as this;
   }
@@ -242,25 +250,25 @@ export class StakeableLockOut extends AmountOutput {
    */
   constructor(amount:BN = undefined, addresses:Array<Buffer> = undefined, locktime:BN = undefined, threshold:number = undefined, stakeableLocktime:BN = undefined, transferableOutput:ParseableOutput = undefined) {
     super(amount, addresses, locktime, threshold);
-    if (typeof stakeableLocktime !== "undefined") {
+    if (typeof stakeableLocktime !== 'undefined') {
       this.stakeableLocktime = bintools.fromBNToBuffer(stakeableLocktime, 8);
     }
-    if (typeof transferableOutput !== "undefined") {
+    if (typeof transferableOutput !== 'undefined') {
       this.transferableOutput = transferableOutput;
       this.synchronize();
     }
   }
 }
 
-
 /**
  * An [[Output]] class which only specifies an Output ownership and uses secp256k1 signature scheme.
  */
 export class SECPOwnerOutput extends Output {
-  protected _typeName = "SECPOwnerOutput";
+  protected _typeName = 'SECPOwnerOutput';
+
   protected _typeID = PlatformVMConstants.SECPOWNEROUTPUTID;
 
-  //serialize and deserialize both are inherited
+  // serialize and deserialize both are inherited
 
   /**
    * Returns the outputID for this output
@@ -270,19 +278,19 @@ export class SECPOwnerOutput extends Output {
   }
 
   /**
-   * 
+   *
    * @param assetID An assetID which is wrapped around the Buffer of the Output
    */
   makeTransferable(assetID:Buffer):TransferableOutput {
     return new TransferableOutput(assetID, this);
   }
 
-  create(...args:any[]):this{
+  create(...args:any[]):this {
     return new SECPOwnerOutput(...args) as this;
   }
 
   clone():this {
-    const newout:SECPOwnerOutput = this.create()
+    const newout:SECPOwnerOutput = this.create();
     newout.fromBuffer(this.toBuffer());
     return newout as this;
   }

@@ -3,11 +3,13 @@
  * @module API-PlatformVM-Inputs
  */
 import { Buffer } from 'buffer/';
+import BN from 'bn.js';
 import BinTools from '../../utils/bintools';
 import { PlatformVMConstants } from './constants';
-import { Input, StandardTransferableInput, StandardAmountInput, StandardParseableInput } from '../../common/input';
+import {
+  Input, StandardTransferableInput, StandardAmountInput, StandardParseableInput,
+} from '../../common/input';
 import { Serialization, SerializedEncoding } from '../../utils/serialization';
-import BN from 'bn.js';
 
 /**
  * @ignore
@@ -25,23 +27,24 @@ const serializer = Serialization.getInstance();
 export const SelectInputClass = (inputid:number, ...args:Array<any>):Input => {
   if (inputid === PlatformVMConstants.SECPINPUTID) {
     return new SECPTransferInput(...args);
-  } else if (inputid === PlatformVMConstants.STAKEABLELOCKINID) {
+  } if (inputid === PlatformVMConstants.STAKEABLELOCKINID) {
     return new StakeableLockIn(...args);
   }
   /* istanbul ignore next */
-  throw new Error("Error - SelectInputClass: unknown inputid");
+  throw new Error('Error - SelectInputClass: unknown inputid');
 };
 
-export class ParseableInput extends StandardParseableInput{
-  protected _typeName = "ParseableInput";
+export class ParseableInput extends StandardParseableInput {
+  protected _typeName = 'ParseableInput';
+
   protected _typeID = undefined;
 
-  //serialize is inherited
+  // serialize is inherited
 
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.input = SelectInputClass(fields["input"]["_typeID"]);
-    this.input.deserialize(fields["input"], encoding);
+    this.input = SelectInputClass(fields.input._typeID);
+    this.input.deserialize(fields.input, encoding);
   }
 
   fromBuffer(bytes:Buffer, offset:number = 0):number {
@@ -53,15 +56,16 @@ export class ParseableInput extends StandardParseableInput{
 }
 
 export class TransferableInput extends StandardTransferableInput {
-  protected _typeName = "TransferableInput";
+  protected _typeName = 'TransferableInput';
+
   protected _typeID = undefined;
 
-  //serialize is inherited
+  // serialize is inherited
 
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.input = SelectInputClass(fields["input"]["_typeID"]);
-    this.input.deserialize(fields["input"], encoding);
+    this.input = SelectInputClass(fields.input._typeID);
+    this.input.deserialize(fields.input, encoding);
   }
 
   /**
@@ -83,14 +87,14 @@ export class TransferableInput extends StandardTransferableInput {
     this.input = SelectInputClass(inputid);
     return this.input.fromBuffer(bytes, offset);
   }
-
 }
 
 export abstract class AmountInput extends StandardAmountInput {
-  protected _typeName = "AmountInput";
+  protected _typeName = 'AmountInput';
+
   protected _typeID = undefined;
 
-  //serialize and deserialize both are inherited
+  // serialize and deserialize both are inherited
 
   select(id:number, ...args: any[]):Input {
     return SelectInputClass(id, ...args);
@@ -98,10 +102,11 @@ export abstract class AmountInput extends StandardAmountInput {
 }
 
 export class SECPTransferInput extends AmountInput {
-  protected _typeName = "SECPTransferInput";
+  protected _typeName = 'SECPTransferInput';
+
   protected _typeID = PlatformVMConstants.SECPINPUTID;
 
-  //serialize and deserialize both are inherited
+  // serialize and deserialize both are inherited
 
   /**
    * Returns the inputID for this input
@@ -112,55 +117,57 @@ export class SECPTransferInput extends AmountInput {
 
   getCredentialID = ():number => PlatformVMConstants.SECPCREDENTIAL;
 
-  create(...args:any[]):this{
+  create(...args:any[]):this {
     return new SECPTransferInput(...args) as this;
   }
 
   clone():this {
-    const newout:SECPTransferInput = this.create()
+    const newout:SECPTransferInput = this.create();
     newout.fromBuffer(this.toBuffer());
     return newout as this;
   }
-
 }
 
 /**
  * An [[Input]] class which specifies an input that has a locktime which can also enable staking of the value held, preventing transfers but not validation.
  */
 export class StakeableLockIn extends AmountInput {
-  protected _typeName = "StakeableLockIn";
+  protected _typeName = 'StakeableLockIn';
+
   protected _typeID = PlatformVMConstants.STAKEABLELOCKINID;
 
-  //serialize and deserialize both are inherited
+  // serialize and deserialize both are inherited
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
-    let outobj:object = {
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
+    const outobj:object = {
       ...fields,
-      "stakeableLocktime": serializer.encoder(this.stakeableLocktime, encoding, "Buffer", "decimalString", 8),
-      "transferableInput": this.transferableInput.serialize(encoding)
+      stakeableLocktime: serializer.encoder(this.stakeableLocktime, encoding, 'Buffer', 'decimalString', 8),
+      transferableInput: this.transferableInput.serialize(encoding),
     };
-    delete outobj["sigIdxs"];
-    delete outobj["sigCount"];
-    delete outobj["amount"];
+    delete outobj.sigIdxs;
+    delete outobj.sigCount;
+    delete outobj.amount;
     return outobj;
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
-    fields["sigIdxs"] = [];
-    fields["sigCount"] = "0";
-    fields["amount"] = "98";
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
+    fields.sigIdxs = [];
+    fields.sigCount = '0';
+    fields.amount = '98';
     super.deserialize(fields, encoding);
-    this.stakeableLocktime = serializer.decoder(fields["stakeableLocktime"], encoding, "decimalString", "Buffer", 8);
+    this.stakeableLocktime = serializer.decoder(fields.stakeableLocktime, encoding, 'decimalString', 'Buffer', 8);
     this.transferableInput = new ParseableInput();
-    this.transferableInput.deserialize(fields["transferableInput"], encoding);
+    this.transferableInput.deserialize(fields.transferableInput, encoding);
     this.synchronize();
   }
 
   protected stakeableLocktime:Buffer;
+
   protected transferableInput:ParseableInput;
 
-  private synchronize(){
-    let input:AmountInput = this.transferableInput.getInput() as AmountInput;
+  private synchronize() {
+    const input:AmountInput = this.transferableInput.getInput() as AmountInput;
     this.sigIdxs = input.getSigIdxs();
     this.sigCount = Buffer.alloc(4);
     this.sigCount.writeUInt32BE(this.sigIdxs.length, 0);
@@ -175,6 +182,7 @@ export class StakeableLockIn extends AmountInput {
   getTransferablInput():ParseableInput {
     return this.transferableInput;
   }
+
   /**
    * Returns the inputID for this input
    */
@@ -205,13 +213,13 @@ export class StakeableLockIn extends AmountInput {
     const barr:Array<Buffer> = [this.stakeableLocktime, xferinBuff];
     return Buffer.concat(barr, bsize);
   }
-  
-  create(...args:any[]):this{
+
+  create(...args:any[]):this {
     return new StakeableLockIn(...args) as this;
   }
 
   clone():this {
-    const newout:StakeableLockIn = this.create()
+    const newout:StakeableLockIn = this.create();
     newout.fromBuffer(this.toBuffer());
     return newout as this;
   }
@@ -229,10 +237,10 @@ export class StakeableLockIn extends AmountInput {
    */
   constructor(amount:BN = undefined, stakeableLocktime:BN = undefined, transferableInput:ParseableInput = undefined) {
     super(amount);
-    if (typeof stakeableLocktime !== "undefined") {
+    if (typeof stakeableLocktime !== 'undefined') {
       this.stakeableLocktime = bintools.fromBNToBuffer(stakeableLocktime, 8);
     }
-    if (typeof transferableInput !== "undefined") {
+    if (typeof transferableInput !== 'undefined') {
       this.transferableInput = transferableInput;
       this.synchronize();
     }

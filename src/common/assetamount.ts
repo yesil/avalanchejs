@@ -14,13 +14,16 @@ import { StandardTransferableInput } from './input';
 export class AssetAmount {
   // assetID that is amount is managing.
   protected assetID: Buffer = Buffer.alloc(32);
+
   // amount of this asset that should be sent.
   protected amount: BN = new BN(0);
+
   // burn is the amount of this asset that should be burned.
   protected burn: BN = new BN(0);
 
   // spent is the total amount of this asset that has been consumed.
   protected spent: BN = new BN(0);
+
   // stakeableLockSpent is the amount of this asset that has been consumed that
   // was locked.
   protected stakeableLockSpent: BN = new BN(0);
@@ -28,6 +31,7 @@ export class AssetAmount {
   // change is the excess amount of this asset that was consumed over the amount
   // requested to be consumed(amount + burn).
   protected change: BN = new BN(0);
+
   // stakeableLockChange is a flag to mark if the input that generated the
   // change was locked.
   protected stakeableLockChange: boolean = false;
@@ -35,41 +39,23 @@ export class AssetAmount {
   // finished is a convenience flag to track "spent >= amount + burn"
   protected finished: boolean = false;
 
-  getAssetID = (): Buffer => {
-    return this.assetID;
-  }
+  getAssetID = (): Buffer => this.assetID;
 
-  getAssetIDString = (): string => {
-    return this.assetID.toString("hex");
-  }
+  getAssetIDString = (): string => this.assetID.toString('hex');
 
-  getAmount = (): BN => {
-    return this.amount
-  }
+  getAmount = (): BN => this.amount;
 
-  getSpent = (): BN => {
-    return this.spent;
-  }
+  getSpent = (): BN => this.spent;
 
-  getBurn = (): BN => {
-    return this.burn;
-  }
+  getBurn = (): BN => this.burn;
 
-  getChange = (): BN => {
-    return this.change;
-  }
+  getChange = (): BN => this.change;
 
-  getStakeableLockSpent = (): BN => {
-    return this.stakeableLockSpent;
-  }
+  getStakeableLockSpent = (): BN => this.stakeableLockSpent;
 
-  getStakeableLockChange = (): boolean => {
-    return this.stakeableLockChange;
-  }
+  getStakeableLockChange = (): boolean => this.stakeableLockChange;
 
-  isFinished = (): boolean => {
-    return this.finished;
-  }
+  isFinished = (): boolean => this.finished;
 
   // spendAmount should only be called if this asset is still awaiting more
   // funds to consume.
@@ -93,102 +79,87 @@ export class AssetAmount {
       this.finished = true;
     }
     return this.finished;
-  }
+  };
 
   constructor(assetID: Buffer, amount: BN, burn: BN) {
     this.assetID = assetID;
-    this.amount = typeof amount === "undefined" ? new BN(0) : amount;
-    this.burn = typeof burn === "undefined" ? new BN(0) : burn;
+    this.amount = typeof amount === 'undefined' ? new BN(0) : amount;
+    this.burn = typeof burn === 'undefined' ? new BN(0) : burn;
     this.spent = new BN(0);
     this.stakeableLockSpent = new BN(0);
     this.stakeableLockChange = false;
   }
 }
 
-export abstract class StandardAssetAmountDestination<TO extends StandardTransferableOutput, TI extends StandardTransferableInput>  {
+export abstract class StandardAssetAmountDestination<TO extends StandardTransferableOutput, TI extends StandardTransferableInput> {
   protected amounts: Array<AssetAmount> = [];
+
   protected destinations: Array<Buffer> = [];
+
   protected senders: Array<Buffer> = [];
+
   protected changeAddresses: Array<Buffer> = [];
+
   protected amountkey: object = {};
+
   protected inputs: Array<TI> = [];
+
   protected outputs: Array<TO> = [];
+
   protected change: Array<TO> = [];
 
   // TODO: should this function allow for repeated calls with the same
   //       assetID?
   addAssetAmount = (assetID: Buffer, amount: BN, burn: BN) => {
-    let aa: AssetAmount = new AssetAmount(assetID, amount, burn);
+    const aa: AssetAmount = new AssetAmount(assetID, amount, burn);
     this.amounts.push(aa);
     this.amountkey[aa.getAssetIDString()] = aa;
-  }
+  };
 
   addInput = (input: TI) => {
     this.inputs.push(input);
-  }
+  };
 
   addOutput = (output: TO) => {
     this.outputs.push(output);
-  }
+  };
 
   addChange = (output: TO) => {
     this.change.push(output);
-  }
+  };
 
-  getAmounts = (): Array<AssetAmount> => {
-    return this.amounts;
-  }
+  getAmounts = (): Array<AssetAmount> => this.amounts;
 
-  getDestinations = (): Array<Buffer> => {
-    return this.destinations;
-  }
+  getDestinations = (): Array<Buffer> => this.destinations;
 
-  getSenders = (): Array<Buffer> => {
-    return this.senders;
-  }
+  getSenders = (): Array<Buffer> => this.senders;
 
-  getChangeAddresses = (): Array<Buffer> => {
-    return this.changeAddresses;
-  }
+  getChangeAddresses = (): Array<Buffer> => this.changeAddresses;
 
-  getAssetAmount = (assetHexStr: string): AssetAmount => {
-    return this.amountkey[assetHexStr];
-  }
+  getAssetAmount = (assetHexStr: string): AssetAmount => this.amountkey[assetHexStr];
 
-  assetExists = (assetHexStr: string): boolean => {
-    return (assetHexStr in this.amountkey);
-  }
+  assetExists = (assetHexStr: string): boolean => (assetHexStr in this.amountkey);
 
-  getInputs = (): Array<TI> => {
-    return this.inputs;
-  }
+  getInputs = (): Array<TI> => this.inputs;
 
-  getOutputs = (): Array<TO> => {
-    return this.outputs;
-  }
+  getOutputs = (): Array<TO> => this.outputs;
 
-  getChangeOutputs = (): Array<TO> => {
-    return this.change;
-  }
+  getChangeOutputs = (): Array<TO> => this.change;
 
-  getAllOutputs = (): Array<TO> => {
-    return this.outputs.concat(this.change);
-  }
+  getAllOutputs = (): Array<TO> => this.outputs.concat(this.change);
 
   canComplete = (): boolean => {
     for (let i = 0; i < this.amounts.length; i++) {
       if (!this.amounts[i].isFinished()) {
-
         return false;
       }
     }
     return true;
-  }
+  };
 
   constructor(destinations: Array<Buffer>, senders: Array<Buffer>, changeAddresses: Array<Buffer>) {
     this.destinations = destinations;
     this.changeAddresses = changeAddresses;
     this.senders = senders;
   }
-
 }

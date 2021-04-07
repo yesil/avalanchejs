@@ -1,14 +1,13 @@
-import Avalanche from '../../src/Avalanche';
-import { InfoAPI } from '../../src/apis/info';
+import { Avalanche } from '../../src';
 
 const ip: string = 'localhost';
 const port: number = 9650;
 const protocol: string = 'http';
 const networkID: number = 12345;
-const avalanche: Avalanche = new Avalanche(ip, port, protocol, networkID);
-const info = new InfoAPI(avalanche);
+const avalanche = new Avalanche(ip, port, protocol, networkID);
+const info = avalanche.Info();
 
-const main = async (): Promise<any> => {
+const main = async () => {
   const alias: string = 'X';
   const blockchainID : string = await info.getBlockchainID(alias);
   console.log(blockchainID);

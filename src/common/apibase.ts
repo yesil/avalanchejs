@@ -77,4 +77,3 @@ export abstract class APIBase {
     this.setBaseURL(baseurl);
   }
 }
-

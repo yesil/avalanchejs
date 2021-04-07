@@ -41,7 +41,7 @@ function serialzeit(aThing:Serializable, name:string){
 
 describe('AVMAPI', () => {
   const networkid:number = 12345;
-  const blockchainid:string = Defaults.network[networkid].X.blockchainID;
+  const blockchainid:string = Defaults.network.get(networkid).X.blockchainID;
   const ip:string = '127.0.0.1';
   const port:number = 9650;
   const protocol:string = 'https';
@@ -137,8 +137,8 @@ describe('AVMAPI', () => {
   });
 
   test('refreshBlockchainID', async () => {
-    let n3bcID:string = Defaults.network[3].X["blockchainID"];
-    let n12345bcID:string = Defaults.network[12345].X["blockchainID"];
+    let n3bcID:string = Defaults.network.get(3).X["blockchainID"];
+    let n12345bcID:string = Defaults.network.get(12345).X["blockchainID"];
     let testAPI:AVMAPI = new AVMAPI(avalanche, '/ext/bc/avm', n3bcID);
     let bc1:string = testAPI.getBlockchainID();
     expect(bc1).toBe(n3bcID);
@@ -1080,7 +1080,7 @@ test("import", async ()=>{
     });
 
     test('buildCreateAssetTx - Variable Cap', async () => {
-      avm.setCreationTxFee(new BN(Defaults.network[12345].P["creationTxFee"]));
+      avm.setCreationTxFee(new BN(Defaults.network.get(12345).P["creationTxFee"]));
       let mintOutputs:Array<SECPMintOutput>  = [secpMintOut1, secpMintOut2];
       const txu1:UnsignedTx = await avm.buildCreateAssetTx(
         set, 
@@ -1239,7 +1239,7 @@ test("import", async ()=>{
     });
 
     test('buildCreateNFTAssetTx', async () => {
-      avm.setCreationTxFee(new BN(Defaults.network[12345].P["creationTxFee"]));
+      avm.setCreationTxFee(new BN(Defaults.network.get(12345).P["creationTxFee"]));
       let minterSets:Array<MinterSet> = [new MinterSet(1, addrs1)];
       let locktime:BN = new BN(0);
 

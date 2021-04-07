@@ -2,11 +2,10 @@
  * @packageDocumentation
  * @module API-Metrics
  */
+import { AxiosRequestConfig } from 'axios';
 import AvalancheCore from '../../avalanche';
 import { RESTAPI } from '../../common/restapi';
 import { RequestResponseData } from '../../common/apibase';
-import { AxiosRequestConfig } from 'axios';
-
 
 /**
  * Class for interacting with a node API that is using the node's MetricsApi.
@@ -16,13 +15,10 @@ import { AxiosRequestConfig } from 'axios';
  * @remarks This extends the [[RESTAPI]] class. This class should not be directly called. Instead, use the [[Avalanche.addAPI]] function to register this interface with Avalanche.
  */
 export class MetricsAPI extends RESTAPI {
-  protected axConf = ():AxiosRequestConfig => {
-    return  {
-      baseURL: `${this.core.getProtocol()}://${this.core.getIP()}:${this.core.getPort()}`,
-      responseType: 'text',
-    };
-
-  }
+  protected axConf = ():AxiosRequestConfig => ({
+    baseURL: `${this.core.getProtocol()}://${this.core.getIP()}:${this.core.getPort()}`,
+    responseType: 'text',
+  });
 
   /**
      *
@@ -39,4 +35,3 @@ export class MetricsAPI extends RESTAPI {
      */
   constructor(core:AvalancheCore, baseurl:string = '/ext/metrics') { super(core, baseurl); }
 }
-

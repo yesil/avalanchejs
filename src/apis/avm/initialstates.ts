@@ -3,8 +3,8 @@
  * @module API-AVM-InitialStates
  */
 
-import { Buffer } from "buffer/";
-import BinTools  from '../../utils/bintools';
+import { Buffer } from 'buffer/';
+import BinTools from '../../utils/bintools';
 import { Output } from '../../common/output';
 import { SelectOutputClass } from './outputs';
 import { AVMConstants } from './constants';
@@ -18,27 +18,29 @@ const serializer = Serialization.getInstance();
 /**
  * Class for creating initial output states used in asset creation
  */
-export class InitialStates extends Serializable{
-  protected _typeName = "AmountInput";
+export class InitialStates extends Serializable {
+  protected _typeName = 'AmountInput';
+
   protected _typeID = undefined;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
-    let flatfxs:object = {}
-    for(let fxid in this.fxs){
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
+    const flatfxs:object = {};
+    for (const fxid in this.fxs) {
       flatfxs[fxid] = this.fxs[fxid].map((o) => o.serialize(encoding));
     }
     return {
       ...fields,
-      "fxs": flatfxs
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      fxs: flatfxs,
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    let unflat:{[fxid:number]:Array<Output>} = {};
-    for(let fxid in fields["fxs"]){
-      unflat[fxid] = fields["fxs"][fxid].map((o:object) => {
-        let out:Output = SelectOutputClass(o["_typeID"]);
+    const unflat:{[fxid:number]:Array<Output>} = {};
+    for (const fxid in fields.fxs) {
+      unflat[fxid] = fields.fxs[fxid].map((o:object) => {
+        const out:Output = SelectOutputClass(o._typeID);
         out.deserialize(o, encoding);
         return out;
       });
@@ -109,6 +111,4 @@ export class InitialStates extends Serializable{
     }
     return Buffer.concat(buff);
   }
-
 }
-  

@@ -7,7 +7,6 @@ import { Buffer } from 'buffer/';
 import createHash from 'create-hash';
 import * as bech32 from 'bech32';
 import { Base58 } from './base58';
-import { Defaults } from './constants';
 
 /**
  * A class containing tools useful in interacting with binary data cross-platform using
@@ -49,12 +48,12 @@ export default class BinTools {
    * @param str the string to verify is Base64
    */
   isBase64(str:string) {
-    if (str ==='' || str.trim() ===''){ return false; }
+    if (str === '' || str.trim() === '') { return false; }
     try {
-        let b64:Buffer = Buffer.from(str, "base64");
-        return b64.toString("base64") === str;
+      const b64:Buffer = Buffer.from(str, 'base64');
+      return b64.toString('base64') === str;
     } catch (err) {
-        return false;
+      return false;
     }
   }
 
@@ -63,11 +62,11 @@ export default class BinTools {
    * @param str the string to verify is base58
    */
   isBase58(str:string) {
-    if (str ==='' || str.trim() ===''){ return false; }
+    if (str === '' || str.trim() === '') { return false; }
     try {
-        return this.b58.encode(this.b58.decode(str)) === str;
+      return this.b58.encode(this.b58.decode(str)) === str;
     } catch (err) {
-        return false;
+      return false;
     }
   }
 
@@ -76,8 +75,8 @@ export default class BinTools {
    * @param str the string to verify is hexidecimal
    */
   isHex(str:string) {
-    if (str ==='' || str.trim() ===''){ return false; }
-    return (str.startsWith("0x") && str.slice(2).match(/^[0-9A-Fa-f]/g) || str.match(/^[0-9A-Fa-f]/g));
+    if (str === '' || str.trim() === '') { return false; }
+    return ((str.startsWith('0x') && str.slice(2).match(/^[0-9A-Fa-f]/g)) || (str.match(/^[0-9A-Fa-f]/g)));
   }
 
   /**
@@ -85,11 +84,11 @@ export default class BinTools {
    * @param str the string to verify is hexidecimal
    */
   isDecimal(str:string) {
-    if (str ==='' || str.trim() ===''){ return false; }
+    if (str === '' || str.trim() === '') { return false; }
     try {
       return new BN(str, 10).toString(10) === str.trim();
     } catch (err) {
-        return false;
+      return false;
     }
   }
 
@@ -99,17 +98,16 @@ export default class BinTools {
    */
   isPrimaryBechAddress = (address:string):boolean => {
     const parts:Array<string> = address.trim().split('-');
-    if(parts.length !== 2) {
+    if (parts.length !== 2) {
       return false;
     }
     try {
       bech32.fromWords(bech32.decode(parts[1]).words);
-    } catch(err) {
-      return false
+    } catch (err) {
+      return false;
     }
     return true;
   };
-
 
   /**
      * Produces a string from a {@link https://github.com/feross/buffer|Buffer}
@@ -139,7 +137,7 @@ export default class BinTools {
      * @param start The index to start the copy
      * @param end The index to end the copy
      */
-  copyFrom = (buff:Buffer, start:number = 0, end:number = undefined):Buffer => {
+  copyFrom = (buff:Buffer, start:number = 0, end?:number):Buffer => {
     if (end === undefined) {
       end = buff.length;
     }
@@ -182,13 +180,7 @@ export default class BinTools {
      *
      * @param ab The ArrayBuffer to convert to a {@link https://github.com/feross/buffer|Buffer}
      */
-  fromArrayBufferToBuffer = (ab:ArrayBuffer):Buffer => {
-    const buf = Buffer.alloc(ab.byteLength);
-    for (let i = 0; i < ab.byteLength; ++i) {
-      buf[i] = ab[i];
-    }
-    return buf;
-  };
+  fromArrayBufferToBuffer = (ab:ArrayBuffer) => Buffer.from(ab);
 
   /**
      * Takes a {@link https://github.com/feross/buffer|Buffer} and converts it
@@ -197,13 +189,14 @@ export default class BinTools {
      * @param buff The {@link https://github.com/feross/buffer|Buffer} to convert
      * to a {@link https://github.com/indutny/bn.js/|BN}
      */
-  fromBufferToBN = (buff:Buffer):BN => {
-    if(typeof buff === "undefined") {
+  fromBufferToBN = (buff:Buffer):BN | undefined => {
+    if (typeof buff === 'undefined') {
       return undefined;
     }
-    return new BN(buff.toString('hex'), 16, 'be')
+    return new BN(buff.toString('hex'), 16, 'be');
   };
-    /**
+
+  /**
      * Takes a {@link https://github.com/indutny/bn.js/|BN} and converts it
      * to a {@link https://github.com/feross/buffer|Buffer}.
      *
@@ -211,8 +204,8 @@ export default class BinTools {
      * to a {@link https://github.com/feross/buffer|Buffer}
      * @param length The zero-padded length of the {@link https://github.com/feross/buffer|Buffer}
      */
-  fromBNToBuffer = (bn:BN, length?:number):Buffer => {
-    if(typeof bn === "undefined") {
+  fromBNToBuffer = (bn:BN, length?:number):Buffer | undefined => {
+    if (typeof bn === 'undefined') {
       return undefined;
     }
     const newarr = bn.toArray('be');
@@ -285,8 +278,8 @@ export default class BinTools {
 
   stringToAddress = (address:string):Buffer => {
     const parts:Array<string> = address.trim().split('-');
-    if(parts[1].startsWith("0x") || parts[1].match(/^[0-9A-F]+$/i)){
-      return Buffer.from(parts[1].replace("0x", ""), "hex");
+    if (parts[1].startsWith('0x') || parts[1].match(/^[0-9A-F]+$/i)) {
+      return Buffer.from(parts[1].replace('0x', ''), 'hex');
     }
     return Buffer.from(bech32.fromWords(bech32.decode(parts[1]).words));
   };
@@ -305,15 +298,15 @@ export default class BinTools {
    */
   parseAddress = (addr:string,
     blockchainID:string,
-    alias:string = undefined,
+    alias?:string,
     addrlen:number = 20):Buffer => {
     const abc:Array<string> = addr.split('-');
     if (abc.length === 2 && ((alias && abc[0] === alias) || (blockchainID && abc[0] === blockchainID))) {
-        const addrbuff = this.stringToAddress(addr);
-        if ((addrlen && addrbuff.length === addrlen) || !(addrlen)) {
-          return addrbuff;
-        }
+      const addrbuff = this.stringToAddress(addr);
+      if ((addrlen && addrbuff.length === addrlen) || !(addrlen)) {
+        return addrbuff;
+      }
     }
-    return undefined;
+    throw new Error('Unexpected value');
   };
 }

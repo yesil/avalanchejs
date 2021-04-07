@@ -6,7 +6,6 @@ import AvalancheCore from '../../avalanche';
 import { JRPCAPI } from '../../common/jrpcapi';
 import { RequestResponseData } from '../../common/apibase';
 
-
 /**
  * Class for interacting with a node API that is using the node's HealthApi.
  *
@@ -30,4 +29,3 @@ export class HealthAPI extends JRPCAPI {
      */
   constructor(core:AvalancheCore, baseurl:string = '/ext/health') { super(core, baseurl); }
 }
-

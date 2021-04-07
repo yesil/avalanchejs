@@ -5,9 +5,9 @@
 
 import { Buffer } from 'buffer/';
 import BinTools from '../../utils/bintools';
-import { 
-  KeyChain, 
-  KeyPair 
+import {
+  KeyChain,
+  KeyPair,
 } from './keychain';
 import { EVMStandardBaseTx } from '../../common/evmtx';
 import { Credential } from '../../common/credentials';
@@ -24,21 +24,20 @@ const bintools: BinTools = BinTools.getInstance();
  * Class representing a base for all transactions.
  */
 export class EVMBaseTx extends EVMStandardBaseTx<KeyPair, KeyChain> {
-  protected _typeName = "BaseTx";
+  protected _typeName = 'BaseTx';
+
   protected _typeID = undefined;
 
-  //serialize is inherited
+  // serialize is inherited
 
-  deserialize(fields: object, encoding: SerializedEncoding = "hex") {
+  deserialize(fields: object, encoding: SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
   }
 
   /**
    * Returns the id of the [[BaseTx]]
    */
-  getTxType = (): number => {
-    return this._typeID;
-  }
+  getTxType = (): number => this._typeID;
 
   /**
    * Takes a {@link https://github.com/feross/buffer|Buffer} containing an [[BaseTx]], parses it, populates the class, and returns the length of the BaseTx in bytes.

@@ -9,28 +9,28 @@ import { MergeRule } from './constants';
  *
  */
 export class PersistanceOptions {
-    protected name:string = undefined;
-  
-    protected overwrite:boolean = false;
-  
-    protected mergeRule:MergeRule = 'union';
-  
-   /**
+  protected name:string = undefined;
+
+  protected overwrite:boolean = false;
+
+  protected mergeRule:MergeRule = 'union';
+
+  /**
     * Returns the namespace of the instance
     */
-    getName = ():string => this.name;
-  
-   /**
+  getName = ():string => this.name;
+
+  /**
     * Returns the overwrite rule of the instance
     */
-    getOverwrite = ():boolean => this.overwrite;
-  
-   /**
+  getOverwrite = ():boolean => this.overwrite;
+
+  /**
     * Returns the [[MergeRule]] of the instance
     */
-    getMergeRule = ():MergeRule => this.mergeRule;
-  
-   /**
+  getMergeRule = ():MergeRule => this.mergeRule;
+
+  /**
     *
     * @param name The namespace of the database the data
     * @param overwrite True if the data should be completey overwritten
@@ -46,10 +46,9 @@ export class PersistanceOptions {
     *   * "unionMinusNew" - the unique set of all elements contained in both sets, excluding values only found in the new set
     *   * "unionMinusSelf" - the unique set of all elements contained in both sets, excluding values only found in the existing set
     */
-    constructor(name:string, overwrite:boolean = false, mergeRule:MergeRule) {
-      this.name = name;
-      this.overwrite = overwrite;
-      this.mergeRule = mergeRule;
-    }
+  constructor(name:string, overwrite:boolean = false, mergeRule:MergeRule) {
+    this.name = name;
+    this.overwrite = overwrite;
+    this.mergeRule = mergeRule;
   }
-  
+}

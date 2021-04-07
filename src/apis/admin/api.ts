@@ -6,7 +6,6 @@ import AvalancheCore from '../../avalanche';
 import { JRPCAPI } from '../../common/jrpcapi';
 import { RequestResponseData } from '../../common/apibase';
 
-
 /**
  * Class for interacting with a node's AdminAPI.
  *
@@ -17,7 +16,6 @@ import { RequestResponseData } from '../../common/apibase';
  */
 
 export class AdminAPI extends JRPCAPI {
-
   /**
      * Assign an API an alias, a different endpoint for the API. The original endpoint will still
      * work. This change only affects this node; other nodes will not know about this alias.

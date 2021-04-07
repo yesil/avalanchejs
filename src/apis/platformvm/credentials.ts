@@ -18,22 +18,22 @@ export const SelectCredentialClass = (credid:number, ...args:Array<any>):Credent
     return new SECPCredential(...args);
   }
   /* istanbul ignore next */
-  throw new Error("Error - SelectCredentialClass: unknown credid");
+  throw new Error('Error - SelectCredentialClass: unknown credid');
 };
 
 export class SECPCredential extends Credential {
-  protected _typeName = "SECPCredential";
+  protected _typeName = 'SECPCredential';
+
   protected _typeID = PlatformVMConstants.SECPCREDENTIAL;
 
-  //serialize and deserialize both are inherited
+  // serialize and deserialize both are inherited
 
   getCredentialID():number {
     return this._typeID;
   }
 
-
   clone():this {
-    let newbase:SECPCredential = new SECPCredential();
+    const newbase:SECPCredential = new SECPCredential();
     newbase.fromBuffer(this.toBuffer());
     return newbase as this;
   }
@@ -43,8 +43,7 @@ export class SECPCredential extends Credential {
   }
 
   select(id:number, ...args:any[]):Credential {
-    let newbasetx:Credential = SelectCredentialClass(id, ...args);
+    const newbasetx:Credential = SelectCredentialClass(id, ...args);
     return newbasetx;
   }
 }
-

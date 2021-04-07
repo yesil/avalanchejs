@@ -12,7 +12,7 @@ import { KeyChain, KeyPair } from './keychain';
 import { StandardBaseTx } from '../../common/tx';
 import { Signature, SigIdx, Credential } from '../../common/credentials';
 import { DefaultNetworkID } from '../../utils/constants';
-import { SelectTxClass } from '../platformvm/tx';
+import { SelectTxClass } from './tx';
 import { Serialization, SerializedEncoding } from '../../utils/serialization';
 
 /**
@@ -24,19 +24,20 @@ const serializer = Serialization.getInstance();
 /**
  * Class representing a base for all transactions.
  */
-export class BaseTx extends StandardBaseTx<KeyPair, KeyChain>{
-  protected _typeName = "BaseTx";
+export class BaseTx extends StandardBaseTx<KeyPair, KeyChain> {
+  protected _typeName = 'BaseTx';
+
   protected _typeID = PlatformVMConstants.CREATESUBNETTX;
 
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.outs = fields["outs"].map((o:TransferableOutput) => {
-      let newOut:TransferableOutput = new TransferableOutput();
+    this.outs = fields.outs.map((o:TransferableOutput) => {
+      const newOut:TransferableOutput = new TransferableOutput();
       newOut.deserialize(o, encoding);
       return newOut;
     });
-    this.ins = fields["ins"].map((i:TransferableInput) => {
-      let newIn:TransferableInput = new TransferableInput();
+    this.ins = fields.ins.map((i:TransferableInput) => {
+      const newIn:TransferableInput = new TransferableInput();
       newIn.deserialize(i, encoding);
       return newIn;
     });
@@ -54,7 +55,6 @@ export class BaseTx extends StandardBaseTx<KeyPair, KeyChain>{
     return this.ins as Array<TransferableInput>;
   }
 
-
   getTotalOuts():Array<TransferableOutput> {
     return this.getOuts() as Array<TransferableOutput>;
   }
@@ -62,9 +62,7 @@ export class BaseTx extends StandardBaseTx<KeyPair, KeyChain>{
   /**
    * Returns the id of the [[BaseTx]]
    */
-  getTxType = ():number => {
-    return PlatformVMConstants.BASETX;
-  }
+  getTxType = ():number => PlatformVMConstants.BASETX;
 
   /**
    * Takes a {@link https://github.com/feross/buffer|Buffer} containing an [[BaseTx]], parses it, populates the class, and returns the length of the BaseTx in bytes.
@@ -99,7 +97,7 @@ export class BaseTx extends StandardBaseTx<KeyPair, KeyChain>{
       offset = xferin.fromBuffer(bytes, offset);
       this.ins.push(xferin);
     }
-    let memolen:number = bintools.copyFrom(bytes, offset, offset + 4).readUInt32BE(0);
+    const memolen:number = bintools.copyFrom(bytes, offset, offset + 4).readUInt32BE(0);
     offset += 4;
     this.memo = bintools.copyFrom(bytes, offset, offset + memolen);
     offset += memolen;
@@ -132,7 +130,7 @@ export class BaseTx extends StandardBaseTx<KeyPair, KeyChain>{
   }
 
   clone():this {
-    let newbase:BaseTx = new BaseTx();
+    const newbase:BaseTx = new BaseTx();
     newbase.fromBuffer(this.toBuffer());
     return newbase as this;
   }
@@ -142,7 +140,7 @@ export class BaseTx extends StandardBaseTx<KeyPair, KeyChain>{
   }
 
   select(id:number, ...args:any[]):this {
-    let newbasetx:BaseTx = SelectTxClass(id, ...args);
+    const newbasetx:BaseTx = SelectTxClass(id, ...args);
     return newbasetx as this;
   }
 

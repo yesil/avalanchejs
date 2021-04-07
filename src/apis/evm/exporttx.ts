@@ -9,15 +9,15 @@ import { EVMConstants } from './constants';
 import { KeyChain, KeyPair } from './keychain';
 import { EVMBaseTx } from './basetx';
 import { SelectCredentialClass } from './credentials';
-import { 
-  Signature, 
-  SigIdx, 
-  Credential 
+import {
+  Signature,
+  SigIdx,
+  Credential,
 } from '../../common/credentials';
 import { EVMInput } from './inputs';
-import { 
-  Serialization, 
-  SerializedEncoding 
+import {
+  Serialization,
+  SerializedEncoding,
 } from '../../utils/serialization';
 import { TransferableOutput } from './outputs';
 
@@ -28,22 +28,24 @@ const bintools: BinTools = BinTools.getInstance();
 const serializer: Serialization = Serialization.getInstance();
 
 export class ExportTx extends EVMBaseTx {
-  protected _typeName = "ExportTx";
-  protected _typeID = EVMConstants.EXPORTTX
+  protected _typeName = 'ExportTx';
 
-  serialize(encoding: SerializedEncoding = "hex"): object {
-    let fields: object = super.serialize(encoding);
+  protected _typeID = EVMConstants.EXPORTTX;
+
+  serialize(encoding: SerializedEncoding = 'hex'): object {
+    const fields: object = super.serialize(encoding);
     return {
       ...fields,
-      "destinationChain": serializer.encoder(this.destinationChain, encoding, "Buffer", "cb58"),
-      "exportedOutputs": this.exportedOutputs.map((i) => i.serialize(encoding))
-    }
-  };
-  deserialize(fields: object, encoding: SerializedEncoding = "hex") {
+      destinationChain: serializer.encoder(this.destinationChain, encoding, 'Buffer', 'cb58'),
+      exportedOutputs: this.exportedOutputs.map((i) => i.serialize(encoding)),
+    };
+  }
+
+  deserialize(fields: object, encoding: SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.destinationChain = serializer.decoder(fields["destinationChain"], encoding, "cb58", "Buffer", 32);
-    this.exportedOutputs = fields["exportedOutputs"].map((i:object) => {
-      let eo:TransferableOutput = new TransferableOutput();
+    this.destinationChain = serializer.decoder(fields.destinationChain, encoding, 'cb58', 'Buffer', 32);
+    this.exportedOutputs = fields.exportedOutputs.map((i:object) => {
+      const eo:TransferableOutput = new TransferableOutput();
       eo.deserialize(i, encoding);
       return eo;
     });
@@ -52,36 +54,40 @@ export class ExportTx extends EVMBaseTx {
   }
 
   protected destinationChain: Buffer = Buffer.alloc(32);
+
   protected numInputs: Buffer = Buffer.alloc(4);
+
   protected inputs: EVMInput[] = [];
+
   protected numExportedOutputs: Buffer = Buffer.alloc(4);
+
   protected exportedOutputs: TransferableOutput[] = [];
 
   /**
    * Returns the destinationChain of the input as {@link https://github.com/feross/buffer|Buffer}
-   */ 
+   */
   getDestinationChain = (): Buffer => this.destinationChain;
 
   /**
    * Returns the inputs as an array of [[EVMInputs]]
-   */ 
+   */
   getInputs = (): EVMInput[] => this.inputs;
 
   /**
    * Returns the outs as an array of [[EVMOutputs]]
-   */ 
+   */
   getExportedOutputs = (): TransferableOutput[] => this.exportedOutputs;
- 
+
   /**
    * Returns a {@link https://github.com/feross/buffer|Buffer} representation of the [[ExportTx]].
    */
   toBuffer(): Buffer {
-    if(typeof this.destinationChain === "undefined") {
-      throw new Error("ExportTx.toBuffer -- this.destinationChain is undefined");
+    if (typeof this.destinationChain === 'undefined') {
+      throw new Error('ExportTx.toBuffer -- this.destinationChain is undefined');
     }
     this.numInputs.writeUInt32BE(this.inputs.length, 0);
     this.numExportedOutputs.writeUInt32BE(this.exportedOutputs.length, 0);
-    let barr: Buffer[] = [super.toBuffer(), this.destinationChain, this.numInputs];
+    const barr: Buffer[] = [super.toBuffer(), this.destinationChain, this.numInputs];
     let bsize: number = super.toBuffer().length + this.destinationChain.length + this.numInputs.length;
     this.inputs.forEach((importIn: EVMInput) => {
       bsize += importIn.toBuffer().length;
@@ -164,11 +170,11 @@ export class ExportTx extends EVMBaseTx {
    * @param exportedOutputs Optional array of the [[EVMOutputs]]s
    */
   constructor(
-    networkid: number = undefined, 
-    blockchainid: Buffer = Buffer.alloc(32, 16), 
-    destinationChain: Buffer = Buffer.alloc(32, 16), 
-    inputs: EVMInput[] = undefined, 
-    exportedOutputs: TransferableOutput[] = undefined
+    networkid: number = undefined,
+    blockchainid: Buffer = Buffer.alloc(32, 16),
+    destinationChain: Buffer = Buffer.alloc(32, 16),
+    inputs: EVMInput[] = undefined,
+    exportedOutputs: TransferableOutput[] = undefined,
   ) {
     super(networkid, blockchainid);
     this.destinationChain = destinationChain;
@@ -178,13 +184,13 @@ export class ExportTx extends EVMBaseTx {
           throw new Error("Error - ExportTx.constructor: invalid EVMInput in array parameter 'inputs'");
         }
       });
-      if(inputs.length > 1) {
+      if (inputs.length > 1) {
         inputs = inputs.sort(EVMInput.comparator());
       }
       this.inputs = inputs;
     }
     if (typeof exportedOutputs !== 'undefined' && Array.isArray(exportedOutputs)) {
-        exportedOutputs.forEach((exportedOutput: TransferableOutput) => {
+      exportedOutputs.forEach((exportedOutput: TransferableOutput) => {
         if (!(exportedOutput instanceof TransferableOutput)) {
           throw new Error("Error - ExportTx.constructor: TransferableOutput EVMInput in array parameter 'exportedOutputs'");
         }
@@ -192,4 +198,4 @@ export class ExportTx extends EVMBaseTx {
       this.exportedOutputs = exportedOutputs;
     }
   }
-}  
+}

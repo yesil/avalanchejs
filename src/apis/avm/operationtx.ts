@@ -25,35 +25,39 @@ const serializer = Serialization.getInstance();
  * Class representing an unsigned Operation transaction.
  */
 export class OperationTx extends BaseTx {
-  protected _typeName = "OperationTx";
+  protected _typeName = 'OperationTx';
+
   protected _codecID = AVMConstants.LATESTCODEC;
+
   protected _typeID = this._codecID === 0 ? AVMConstants.OPERATIONTX : AVMConstants.OPERATIONTX_CODECONE;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "ops": this.ops.map((o) => o.serialize(encoding))
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      ops: this.ops.map((o) => o.serialize(encoding)),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.ops = fields["ops"].map((o:object) => {
-      let op:TransferableOperation = new TransferableOperation();
+    this.ops = fields.ops.map((o:object) => {
+      const op:TransferableOperation = new TransferableOperation();
       op.deserialize(o, encoding);
       return op;
     });
     this.numOps = Buffer.alloc(4);
-    this.numOps.writeUInt32BE(this.ops.length,0);
+    this.numOps.writeUInt32BE(this.ops.length, 0);
   }
 
   protected numOps:Buffer = Buffer.alloc(4);
+
   protected ops:Array<TransferableOperation> = [];
 
   setCodecID(codecID: number): void {
-    if(codecID !== 0 && codecID !== 1) {
+    if (codecID !== 0 && codecID !== 1) {
       /* istanbul ignore next */
-        throw new Error("Error - OperationTx.setCodecID: invalid codecID. Valid codecIDs are 0 and 1.");
+      throw new Error('Error - OperationTx.setCodecID: invalid codecID. Valid codecIDs are 0 and 1.');
     }
     this._codecID = codecID;
     this._typeID = this._codecID === 0 ? AVMConstants.OPERATIONTX : AVMConstants.OPERATIONTX_CODECONE;
@@ -62,9 +66,7 @@ export class OperationTx extends BaseTx {
   /**
    * Returns the id of the [[OperationTx]]
    */
-  getTxType = ():number => {
-    return this._typeID;
-  }
+  getTxType = ():number => this._typeID;
 
   /**
    * Takes a {@link https://github.com/feross/buffer|Buffer} containing an [[OperationTx]], parses it, populates the class, and returns the length of the [[OperationTx]] in bytes.
@@ -92,13 +94,13 @@ export class OperationTx extends BaseTx {
    * Returns a {@link https://github.com/feross/buffer|Buffer} representation of the [[OperationTx]].
    */
   toBuffer():Buffer {
-      this.numOps.writeUInt32BE(this.ops.length, 0);
-      let barr:Array<Buffer> = [super.toBuffer(), this.numOps];
-      this.ops = this.ops.sort(TransferableOperation.comparator());
-      for(let i = 0; i < this.ops.length; i++) {
-          barr.push(this.ops[i].toBuffer());
-      }
-      return Buffer.concat(barr);
+    this.numOps.writeUInt32BE(this.ops.length, 0);
+    const barr:Array<Buffer> = [super.toBuffer(), this.numOps];
+    this.ops = this.ops.sort(TransferableOperation.comparator());
+    for (let i = 0; i < this.ops.length; i++) {
+      barr.push(this.ops[i].toBuffer());
+    }
+    return Buffer.concat(barr);
   }
 
   /**
@@ -134,13 +136,13 @@ export class OperationTx extends BaseTx {
   }
 
   clone():this {
-      let newbase:OperationTx = new OperationTx();
-      newbase.fromBuffer(this.toBuffer());
-      return newbase as this;
+    const newbase:OperationTx = new OperationTx();
+    newbase.fromBuffer(this.toBuffer());
+    return newbase as this;
   }
 
   create(...args:any[]):this {
-      return new OperationTx(...args) as this;
+    return new OperationTx(...args) as this;
   }
 
   /**
@@ -156,7 +158,7 @@ export class OperationTx extends BaseTx {
   constructor(
     networkid:number = DefaultNetworkID, blockchainid:Buffer = Buffer.alloc(32, 16),
     outs:Array<TransferableOutput> = undefined, ins:Array<TransferableInput> = undefined,
-    memo:Buffer = undefined, ops:Array<TransferableOperation> = undefined
+    memo:Buffer = undefined, ops:Array<TransferableOperation> = undefined,
   ) {
     super(networkid, blockchainid, outs, ins, memo);
     if (typeof ops !== 'undefined' && Array.isArray(ops)) {

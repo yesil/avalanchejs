@@ -20,27 +20,28 @@ import { Serialization, SerializedEncoding } from '../../utils/serialization';
 const bintools = BinTools.getInstance();
 const serializer = Serialization.getInstance();
 
-
 /**
  * Class representing an unsigned Import transaction.
  */
 export class ImportTx extends BaseTx {
-  protected _typeName = "ImportTx";
+  protected _typeName = 'ImportTx';
+
   protected _typeID = PlatformVMConstants.IMPORTTX;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "sourceChain": serializer.encoder(this.sourceChain, encoding, "Buffer", "cb58"),
-      "importIns": this.importIns.map((i) => i.serialize(encoding))
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      sourceChain: serializer.encoder(this.sourceChain, encoding, 'Buffer', 'cb58'),
+      importIns: this.importIns.map((i) => i.serialize(encoding)),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.sourceChain = serializer.decoder(fields["sourceChain"], encoding, "cb58", "Buffer", 32);
-    this.importIns = fields["importIns"].map((i:object) => {
-      let ii:TransferableInput = new TransferableInput();
+    this.sourceChain = serializer.decoder(fields.sourceChain, encoding, 'cb58', 'Buffer', 32);
+    this.importIns = fields.importIns.map((i:object) => {
+      const ii:TransferableInput = new TransferableInput();
       ii.deserialize(i, encoding);
       return ii;
     });
@@ -49,16 +50,16 @@ export class ImportTx extends BaseTx {
   }
 
   protected sourceChain:Buffer = Buffer.alloc(32);
+
   protected numIns:Buffer = Buffer.alloc(4);
+
   protected importIns:Array<TransferableInput> = [];
 
   /**
      * Returns the id of the [[ImportTx]]
      */
-  getTxType = ():number => {
-    return this._typeID;
-  }
-  
+  getTxType = ():number => this._typeID;
+
   /**
      * Takes a {@link https://github.com/feross/buffer|Buffer} containing an [[ImportTx]], parses it, populates the class, and returns the length of the [[ImportTx]] in bytes.
      *
@@ -87,17 +88,18 @@ export class ImportTx extends BaseTx {
    * Returns a {@link https://github.com/feross/buffer|Buffer} representation of the [[ImportTx]].
    */
   toBuffer():Buffer {
-    if(typeof this.sourceChain === "undefined") {
-      throw new Error("ImportTx.toBuffer -- this.sourceChain is undefined");
+    if (typeof this.sourceChain === 'undefined') {
+      throw new Error('ImportTx.toBuffer -- this.sourceChain is undefined');
     }
     this.numIns.writeUInt32BE(this.importIns.length, 0);
-    let barr:Array<Buffer> = [super.toBuffer(), this.sourceChain, this.numIns];
+    const barr:Array<Buffer> = [super.toBuffer(), this.sourceChain, this.numIns];
     this.importIns = this.importIns.sort(TransferableInput.comparator());
-    for(let i = 0; i < this.importIns.length; i++) {
-        barr.push(this.importIns[i].toBuffer());
+    for (let i = 0; i < this.importIns.length; i++) {
+      barr.push(this.importIns[i].toBuffer());
     }
     return Buffer.concat(barr);
   }
+
   /**
      * Returns an array of [[TransferableInput]]s in this transaction.
      */
@@ -131,7 +133,7 @@ export class ImportTx extends BaseTx {
   }
 
   clone():this {
-    let newbase:ImportTx = new ImportTx();
+    const newbase:ImportTx = new ImportTx();
     newbase.fromBuffer(this.toBuffer());
     return newbase as this;
   }
@@ -152,9 +154,9 @@ export class ImportTx extends BaseTx {
    * @param importIns Array of [[TransferableInput]]s used in the transaction
    */
   constructor(
-    networkid:number = DefaultNetworkID, blockchainid:Buffer = Buffer.alloc(32, 16), 
+    networkid:number = DefaultNetworkID, blockchainid:Buffer = Buffer.alloc(32, 16),
     outs:Array<TransferableOutput> = undefined, ins:Array<TransferableInput> = undefined,
-    memo:Buffer = undefined, sourceChain:Buffer = undefined, importIns:Array<TransferableInput> = undefined
+    memo:Buffer = undefined, sourceChain:Buffer = undefined, importIns:Array<TransferableInput> = undefined,
   ) {
     super(networkid, blockchainid, outs, ins, memo);
     this.sourceChain = sourceChain; // do no correct, if it's wrong it'll bomb on toBuffer

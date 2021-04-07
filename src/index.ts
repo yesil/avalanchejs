@@ -2,6 +2,8 @@
  * @packageDocumentation
  * @module Avalanche
  */
+import BN from 'bn.js';
+import { Buffer } from 'buffer/';
 import AvalancheCore from './avalanche';
 import { AdminAPI } from './apis/admin/api';
 import { AuthAPI } from './apis/auth/api';
@@ -16,8 +18,6 @@ import { DefaultNetworkID, Defaults } from './utils/constants';
 import { getPreferredHRP } from './utils/helperfunctions';
 import BinTools from './utils/bintools';
 import DB from './utils/db';
-import BN from "bn.js";
-import { Buffer } from 'buffer/';
 
 /**
  * AvalancheJS is middleware for interacting with Avalanche node RPC APIs.
@@ -95,43 +95,45 @@ export default class Avalanche extends AvalancheCore {
     port:number,
     protocol:string = 'http',
     networkID:number = DefaultNetworkID,
-    XChainID:string = undefined,
-    CChainID:string = undefined,
-    hrp:string = undefined,
-    skipinit:boolean = false) {
+    XChainID?:string,
+    CChainID?:string,
+    hrp?:string,
+    skipinit:boolean = false,
+  ) {
     super(ip, port, protocol);
     let xchainid = XChainID;
     let cchainid = CChainID;
 
+    const network = Defaults.network.get(networkID);
     if (typeof XChainID === 'undefined'
     || !XChainID
     || XChainID.toLowerCase() === 'x') {
-      if (networkID.toString() in Defaults.network) {
-        xchainid = Defaults.network[networkID].X.blockchainID;
+      if (network) {
+        xchainid = network.chains.X.blockchainID;
       } else {
-        xchainid = Defaults.network[12345].X.blockchainID;
+        xchainid = Defaults.network.get(12345)?.chains.X.blockchainID;
       }
     }
     if (typeof CChainID === 'undefined'
     || !CChainID
     || CChainID.toLowerCase() === 'c') {
-      if (networkID.toString() in Defaults.network) {
-        cchainid = Defaults.network[networkID].C.blockchainID;
+      if (network) {
+        cchainid = network.chains.C.blockchainID;
       } else {
-        cchainid = Defaults.network[12345].C.blockchainID;
+        cchainid = Defaults.network.get(12345)?.chains.C.blockchainID;
       }
     }
     if (typeof networkID === 'number' && networkID >= 0) {
       this.networkID = networkID;
-    } else if(typeof networkID === "undefined"){
+    } else if (typeof networkID === 'undefined') {
       networkID = DefaultNetworkID;
     }
-    if(typeof hrp !== "undefined"){
+    if (typeof hrp !== 'undefined') {
       this.hrp = hrp;
     } else {
       this.hrp = getPreferredHRP(this.networkID);
     }
-    
+
     if (!skipinit) {
       this.addAPI('admin', AdminAPI);
       this.addAPI('auth', AuthAPI);
@@ -164,4 +166,3 @@ export * as info from './apis/info';
 export * as keystore from './apis/keystore';
 export * as metrics from './apis/metrics';
 export * as platformvm from './apis/platformvm';
-

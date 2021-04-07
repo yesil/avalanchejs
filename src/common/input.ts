@@ -3,8 +3,8 @@
  * @module Common-Inputs
  */
 import { Buffer } from 'buffer/';
-import BinTools from '../utils/bintools';
 import BN from 'bn.js';
+import BinTools from '../utils/bintools';
 import { SigIdx } from './credentials';
 import { Serializable, Serialization, SerializedEncoding } from '../utils/serialization';
 
@@ -15,20 +15,22 @@ const bintools = BinTools.getInstance();
 const serializer = Serialization.getInstance();
 
 export abstract class Input extends Serializable {
-  protected _typeName = "Input";
+  protected _typeName = 'Input';
+
   protected _typeID = undefined;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "sigIdxs": this.sigIdxs.map((s) => s.serialize(encoding))
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      sigIdxs: this.sigIdxs.map((s) => s.serialize(encoding)),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.sigIdxs = fields["sigIdxs"].map((s:object) => {
-      let sidx:SigIdx = new SigIdx();
+    this.sigIdxs = fields.sigIdxs.map((s:object) => {
+      const sidx:SigIdx = new SigIdx();
       sidx.deserialize(s, encoding);
       return sidx;
     });
@@ -36,6 +38,7 @@ export abstract class Input extends Serializable {
   }
 
   protected sigCount:Buffer = Buffer.alloc(4);
+
   protected sigIdxs:Array<SigIdx> = []; // idxs of signers from utxo
 
   static comparator = ():(a:Input, b:Input) => (1|-1|0) => (a:Input, b:Input):(1|-1|0) => {
@@ -116,20 +119,20 @@ export abstract class Input extends Serializable {
   abstract create(...args:any[]):this;
 
   abstract select(id:number, ...args:any[]):Input;
-  
 }
 
 export abstract class StandardParseableInput extends Serializable {
-  protected _typeName = "StandardParseableInput";
+  protected _typeName = 'StandardParseableInput';
+
   protected _typeID = undefined;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "input": this.input.serialize(encoding)
-    }
-  };
+      input: this.input.serialize(encoding),
+    };
+  }
 
   protected input:Input;
 
@@ -145,7 +148,7 @@ export abstract class StandardParseableInput extends Serializable {
   getInput = ():Input => this.input;
 
   // must be implemented to select input types for the VM in question
-  abstract fromBuffer(bytes:Buffer, offset?:number):number; 
+  abstract fromBuffer(bytes:Buffer, offset?:number):number;
 
   toBuffer():Buffer {
     const inbuff:Buffer = this.input.toBuffer();
@@ -154,10 +157,10 @@ export abstract class StandardParseableInput extends Serializable {
     const barr:Array<Buffer> = [inid, inbuff];
     return Buffer.concat(barr, inid.length + inbuff.length);
   }
-  
+
   /**
    * Class representing an [[StandardParseableInput]] for a transaction.
-   * 
+   *
    * @param input A number representing the InputID of the [[StandardParseableInput]]
    */
   constructor(input:Input = undefined) {
@@ -168,29 +171,33 @@ export abstract class StandardParseableInput extends Serializable {
   }
 }
 
-export abstract class StandardTransferableInput extends StandardParseableInput{
-  protected _typeName = "StandardTransferableInput";
+export abstract class StandardTransferableInput extends StandardParseableInput {
+  protected _typeName = 'StandardTransferableInput';
+
   protected _typeID = undefined;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "txid": serializer.encoder(this.txid, encoding, "Buffer", "cb58"),
-      "outputidx": serializer.encoder(this.outputidx, encoding, "Buffer", "decimalString"),
-      "assetid": serializer.encoder(this.assetid, encoding, "Buffer", "cb58"),
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      txid: serializer.encoder(this.txid, encoding, 'Buffer', 'cb58'),
+      outputidx: serializer.encoder(this.outputidx, encoding, 'Buffer', 'decimalString'),
+      assetid: serializer.encoder(this.assetid, encoding, 'Buffer', 'cb58'),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.txid = serializer.decoder(fields["txid"], encoding, "cb58", "Buffer", 32);
-    this.outputidx = serializer.decoder(fields["outputidx"], encoding, "decimalString", "Buffer", 4);
-    this.assetid = serializer.decoder(fields["assetid"], encoding, "cb58", "Buffer", 32);
-    //input deserialization must be implmented in child classes
+    this.txid = serializer.decoder(fields.txid, encoding, 'cb58', 'Buffer', 32);
+    this.outputidx = serializer.decoder(fields.outputidx, encoding, 'decimalString', 'Buffer', 4);
+    this.assetid = serializer.decoder(fields.assetid, encoding, 'cb58', 'Buffer', 32);
+    // input deserialization must be implmented in child classes
   }
 
   protected txid:Buffer = Buffer.alloc(32);
+
   protected outputidx:Buffer = Buffer.alloc(4);
+
   protected assetid:Buffer = Buffer.alloc(32);
 
   /**
@@ -222,7 +229,7 @@ export abstract class StandardTransferableInput extends StandardParseableInput{
    */
   getAssetID = ():Buffer => this.assetid;
 
-  abstract fromBuffer(bytes:Buffer, offset?:number):number; 
+  abstract fromBuffer(bytes:Buffer, offset?:number):number;
 
   /**
    * Returns a {@link https://github.com/feross/buffer|Buffer} representation of the [[StandardTransferableInput]].
@@ -266,23 +273,26 @@ export abstract class StandardTransferableInput extends StandardParseableInput{
  * An [[Input]] class which specifies a token amount .
  */
 export abstract class StandardAmountInput extends Input {
-  protected _typeName = "StandardAmountInput";
+  protected _typeName = 'StandardAmountInput';
+
   protected _typeID = undefined;
 
-  serialize(encoding:SerializedEncoding = "hex"):object {
-    let fields:object = super.serialize(encoding);
+  serialize(encoding:SerializedEncoding = 'hex'):object {
+    const fields:object = super.serialize(encoding);
     return {
       ...fields,
-      "amount": serializer.encoder(this.amount, encoding, "Buffer", "decimalString", 8)
-    }
-  };
-  deserialize(fields:object, encoding:SerializedEncoding = "hex") {
+      amount: serializer.encoder(this.amount, encoding, 'Buffer', 'decimalString', 8),
+    };
+  }
+
+  deserialize(fields:object, encoding:SerializedEncoding = 'hex') {
     super.deserialize(fields, encoding);
-    this.amount = serializer.decoder(fields["amount"], encoding, "decimalString", "Buffer", 8);
+    this.amount = serializer.decoder(fields.amount, encoding, 'decimalString', 'Buffer', 8);
     this.amountValue = bintools.fromBufferToBN(this.amount);
   }
 
   protected amount:Buffer = Buffer.alloc(8);
+
   protected amountValue:BN = new BN(0);
 
   /**
